@@ -230,8 +230,8 @@ export default function Books() {
 
       {/* Order Modal */}
       <Dialog open={isOrderModalOpen} onOpenChange={setIsOrderModalOpen}>
-        <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
-          <div className="bg-secondary p-6 text-white">
+        <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-secondary p-6 text-white shrink-0">
             <DialogHeader>
               <DialogTitle className="text-2xl font-serif">Order Details</DialogTitle>
               <DialogDescription className="text-white/70">
@@ -240,7 +240,7 @@ export default function Books() {
             </DialogHeader>
           </div>
           
-          <div className="p-6">
+          <div className="p-6 overflow-y-auto flex-1">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 

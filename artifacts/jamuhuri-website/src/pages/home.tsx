@@ -90,6 +90,70 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Podcasts Section — moved up */}
+      <section className="py-24 bg-[#0f2337]">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge variant="outline" className="text-[#c9a227] border-[#c9a227]/40 mb-4 py-1 px-3 uppercase tracking-wider font-mono text-xs">
+              The Market Colour Podcast
+            </Badge>
+            <h2 className="text-4xl font-serif font-bold text-white mb-4">Latest Episodes</h2>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+              Tune into recent episodes for timely analysis and commentary on global and Kenyan markets.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {podcasts?.map((podcast, i) => (
+              <motion.div
+                key={podcast.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <a
+                  href={podcast.buzzsproutUrl || "https://marketcolourpodcast.buzzsprout.com"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block group h-full"
+                >
+                  <Card className="h-full bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#c9a227]/40 transition-colors">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-2 mb-4 text-xs text-white/50 font-mono">
+                        <span>{new Date(podcast.publishedAt).toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span>{podcast.duration || '45 min'}</span>
+                      </div>
+                      <h3 className="font-serif text-xl font-bold mb-3 text-white group-hover:text-[#c9a227] transition-colors">
+                        {podcast.title}
+                      </h3>
+                      <p className="text-white/60 text-sm line-clamp-3 mb-6">
+                        {podcast.description}
+                      </p>
+                      <div className="flex items-center text-[#c9a227] font-semibold text-sm">
+                        Listen Now <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </a>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <a
+              href="https://marketcolourpodcast.buzzsprout.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-[#c9a227] font-semibold hover:underline"
+            >
+              All Episodes on Buzzsprout <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Books Showcase */}
       <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
@@ -97,7 +161,7 @@ export default function Home() {
             <div>
               <h2 className="text-4xl font-serif font-bold text-foreground mb-4">Published Works</h2>
               <p className="text-muted-foreground text-lg max-w-2xl">
-                Deepen your financial literacy with authoritative texts on markets, trading, and personal wealth.
+                Available in two formats — physical delivery to your door, or instant digital copy sent to your inbox.
               </p>
             </div>
             <Button asChild variant="ghost" className="hidden sm:flex">
@@ -105,59 +169,102 @@ export default function Home() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {books?.slice(0, 3).map((book, i) => (
-              <motion.div 
-                key={book.id}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl mx-auto">
+            {/* Hard Copy Sample */}
+            {books?.[0] && (
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
+                transition={{ duration: 0.5 }}
               >
-                <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:border-primary/30 transition-colors">
-                  <div className="aspect-[3/4] relative bg-muted overflow-hidden">
-                    <img 
-                      src={book.coverImage || '/images/book-cover-markets.png'} 
-                      alt={book.title}
-                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                <Card className="h-full flex flex-col overflow-hidden border-2 border-orange-200 hover:border-orange-400 transition-colors shadow-md">
+                  <div className="bg-orange-50 px-5 py-3 flex items-center gap-2 border-b border-orange-200">
+                    <Package className="h-4 w-4 text-orange-600" />
+                    <span className="text-xs font-bold text-orange-700 uppercase tracking-wider">Hard Copy — Physical Delivery</span>
+                  </div>
+                  <div className="aspect-[3/4] relative bg-gradient-to-br from-[#0f2337] to-[#1a3a5c] overflow-hidden flex items-center justify-center p-8">
+                    <img
+                      src={books[0].coverImage || bookCoverImg}
+                      alt={books[0].title}
+                      className="object-contain w-full h-full drop-shadow-2xl"
                     />
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-background/90 text-foreground backdrop-blur-sm hover:bg-background/90 border-none shadow-sm">
-                        {book.type === 'both' ? 'Print & Digital' : book.type === 'ebook' ? 'E-Book' : 'Hardcopy'}
-                      </Badge>
-                    </div>
                   </div>
                   <CardContent className="flex-1 flex flex-col p-6">
-                    <h3 className="font-serif text-xl font-bold mb-2 line-clamp-2">{book.title}</h3>
-                    <p className="text-muted-foreground text-sm flex-1 line-clamp-3 mb-6">
-                      {book.description}
+                    <h3 className="font-serif text-xl font-bold mb-2">{books[0].title}</h3>
+                    <p className="text-muted-foreground text-sm flex-1 line-clamp-3 mb-4">
+                      {books[0].description}
                     </p>
-                    <div className="flex items-center justify-between mt-auto">
-                      <span className="font-mono font-bold text-primary">
-                        {book.hardcopyPrice ? `${book.currency} ${book.hardcopyPrice.toLocaleString()}` : 'Contact for price'}
-                      </span>
-                      <Button asChild variant="outline" size="sm">
-                        <Link href="/books">Click to Order</Link>
-                      </Button>
+                    <div className="bg-orange-50 rounded-lg p-3 mb-4 text-xs text-orange-800 space-y-1">
+                      <p><strong>Pay on Delivery</strong> via M-PESA</p>
+                      <p>Shipping charges based on your location</p>
                     </div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="font-mono font-bold text-lg text-[#0f2337]">
+                        {books[0].hardcopyPrice ? `${books[0].currency} ${books[0].hardcopyPrice.toLocaleString()}` : 'Contact for price'}
+                      </span>
+                    </div>
+                    <Button asChild className="w-full bg-[#0f2337] hover:bg-[#0f2337]/90 text-white font-semibold gap-2">
+                      <Link href="/books"><Package className="h-4 w-4" /> Order Hard Copy</Link>
+                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
+            )}
+
+            {/* Digital Sample */}
+            {books?.[1] && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <Card className="h-full flex flex-col overflow-hidden border-2 border-blue-200 hover:border-blue-400 transition-colors shadow-md">
+                  <div className="bg-blue-50 px-5 py-3 flex items-center gap-2 border-b border-blue-200">
+                    <Monitor className="h-4 w-4 text-blue-600" />
+                    <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Digital Copy — Emailed to You</span>
+                  </div>
+                  <div className="aspect-[3/4] relative bg-gradient-to-br from-[#1a2a4a] to-[#0d1f3c] overflow-hidden flex items-center justify-center p-8">
+                    <img
+                      src={books[1].coverImage || bookCoverImg}
+                      alt={books[1].title}
+                      className="object-contain w-full h-full drop-shadow-2xl"
+                    />
+                  </div>
+                  <CardContent className="flex-1 flex flex-col p-6">
+                    <h3 className="font-serif text-xl font-bold mb-2">{books[1].title}</h3>
+                    <p className="text-muted-foreground text-sm flex-1 line-clamp-3 mb-4">
+                      {books[1].description}
+                    </p>
+                    <div className="bg-blue-50 rounded-lg p-3 mb-4 text-xs text-blue-800 space-y-1">
+                      <p><strong>Digital delivery</strong> to your email inbox</p>
+                      <p>Instant access after payment confirmation</p>
+                    </div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="font-mono font-bold text-lg text-blue-700">
+                        {books[1].ebookPrice ? `${books[1].currency} ${books[1].ebookPrice.toLocaleString()}` : books[1].hardcopyPrice ? `${books[1].currency} ${books[1].hardcopyPrice.toLocaleString()}` : 'Contact for price'}
+                      </span>
+                    </div>
+                    <Button asChild variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 font-semibold gap-2">
+                      <Link href="/books"><Monitor className="h-4 w-4" /> Order Digital Copy</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
           </div>
-          <div className="mt-8 flex justify-center sm:hidden">
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/books">View All Books</Link>
+
+          <div className="mt-8 text-center">
+            <Button asChild variant="ghost" className="text-muted-foreground">
+              <Link href="/books">See full books catalogue <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Markets Teaser */}
+      {/* Markets Teaser — moved down */}
       <section className="py-24 bg-white border-y border-border/30 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/2 h-full opacity-5 pointer-events-none">
-          <img src="/images/markets-abstract.png" alt="Markets Abstract" className="w-full h-full object-cover" />
-        </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl">
             <Badge variant="outline" className="mb-6 border-primary/30 text-primary">Market Insights</Badge>
@@ -180,56 +287,6 @@ export default function Home() {
             <Button asChild size="lg">
               <Link href="/markets">Explore Money Markets</Link>
             </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Podcasts Section */}
-      <section className="py-24 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-serif font-bold text-foreground mb-4">Latest Podcasts</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Tune into recent episodes of The Market Colour for timely analysis and commentary.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {podcasts?.map((podcast, i) => (
-              <motion.div
-                key={podcast.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-              >
-                <a 
-                  href={podcast.buzzsproutUrl || "https://marketcolourpodcast.buzzsprout.com"} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="block group h-full"
-                >
-                  <Card className="h-full bg-card hover:bg-accent/5 transition-colors border-border/50 hover:border-primary/30">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground font-mono">
-                        <span>{new Date(podcast.publishedAt).toLocaleDateString()}</span>
-                        <span>•</span>
-                        <span>{podcast.duration || '45 min'}</span>
-                      </div>
-                      <h3 className="font-serif text-xl font-bold mb-3 group-hover:text-primary transition-colors">
-                        {podcast.title}
-                      </h3>
-                      <p className="text-muted-foreground text-sm line-clamp-3 mb-6">
-                        {podcast.description}
-                      </p>
-                      <div className="flex items-center text-primary font-semibold text-sm">
-                        Listen Episode <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </a>
-              </motion.div>
-            ))}
           </div>
         </div>
       </section>
