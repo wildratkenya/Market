@@ -1,10 +1,12 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Headphones, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Headphones, TrendingUp, Package, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListBooks, getListBooksQueryKey, useGetLatestPodcasts, getGetLatestPodcastsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import bookCoverImg from "@assets/An_Introduction_to_Financial_Markets_1775134561365.png";
+import podcastImg from "@assets/The_Market_Color_Podcast_1775135182993.jpg";
 
 export default function Home() {
   const { data: books } = useListBooks({ query: { queryKey: getListBooksQueryKey() } });
@@ -13,35 +15,35 @@ export default function Home() {
   return (
     <div className="w-full">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex flex-col md:flex-row items-stretch bg-secondary overflow-hidden">
-        {/* Background Image with overlay */}
-        <div 
-          className="absolute inset-0 z-0 opacity-20 pointer-events-none"
-          style={{ backgroundImage: 'url(/images/hero-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}
-        />
-        
+      <section className="relative min-h-[90vh] flex flex-col md:flex-row items-stretch overflow-hidden">
+
         {/* Left Side: Book Intro */}
-        <div className="flex-1 z-10 flex flex-col justify-center px-8 md:px-16 py-20 border-r border-secondary-border/30">
-          <motion.div 
+        <div className="flex-1 relative flex flex-col justify-center px-8 md:px-16 py-20 bg-[#0f2337] overflow-hidden">
+          {/* Book cover background */}
+          <div className="absolute inset-0 opacity-20 pointer-events-none">
+            <img src={bookCoverImg} alt="" className="w-full h-full object-cover object-center" />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0f2337] via-[#0f2337]/90 to-[#0f2337]/60" />
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="max-w-2xl"
+            className="relative z-10 max-w-2xl"
           >
-            <Badge variant="outline" className="text-primary border-primary/50 mb-6 py-1 px-3 uppercase tracking-wider font-mono text-xs">
+            <Badge variant="outline" className="text-[#c9a227] border-[#c9a227]/50 mb-6 py-1 px-3 uppercase tracking-wider font-mono text-xs">
               Latest Release
             </Badge>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight">
-              Introduction to <span className="text-primary italic">Money Markets</span>
+              Introduction to <span className="text-[#c9a227] italic">Money Markets</span>
             </h1>
-            <p className="text-secondary-foreground/80 text-lg md:text-xl mb-10 leading-relaxed">
+            <p className="text-white/75 text-lg md:text-xl mb-10 leading-relaxed">
               A comprehensive guide to understanding the global financial system and how it shapes the Kenyan economy. Demystifying bonds, T-bills, and interest rates for the everyday investor.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg" className="text-lg px-8 py-6 h-auto">
+              <Button asChild size="lg" className="text-lg px-8 py-6 h-auto bg-[#c9a227] text-[#0f2337] hover:bg-[#b8911e] font-bold">
                 <Link href="/books">Order Now <ArrowRight className="ml-2 h-5 w-5" /></Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-auto text-white border-white/20 hover:bg-white/10 hover:text-white">
+              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-auto text-white border-white/30 hover:bg-white/10 hover:text-white">
                 <Link href="/about">About the Author</Link>
               </Button>
             </div>
@@ -49,36 +51,37 @@ export default function Home() {
         </div>
 
         {/* Right Side: Podcast Intro */}
-        <div className="flex-1 z-10 flex flex-col justify-center px-8 md:px-16 py-20 bg-secondary/95 backdrop-blur-sm">
-          <motion.div 
+        <div className="flex-1 relative flex flex-col justify-center px-8 md:px-16 py-20 overflow-hidden">
+          {/* Podcast image background */}
+          <div className="absolute inset-0">
+            <img src={podcastImg} alt="The Market Colour Podcast" className="w-full h-full object-cover object-center" />
+          </div>
+          <div className="absolute inset-0 bg-[#0f2337]/80 backdrop-blur-[2px]" />
+          <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="max-w-xl mx-auto w-full"
+            className="relative z-10 max-w-xl mx-auto w-full"
           >
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+              <div className="h-12 w-12 rounded-full bg-[#c9a227]/20 flex items-center justify-center text-[#c9a227]">
                 <Headphones className="h-6 w-6" />
               </div>
               <h2 className="text-3xl font-serif font-bold text-white">The Market Colour</h2>
             </div>
-            <p className="text-secondary-foreground/80 text-lg mb-8 leading-relaxed">
+            <p className="text-white/80 text-lg mb-8 leading-relaxed">
               Join Jamuhuri weekly as he breaks down complex market trends into actionable insights. Real talk on the NSE, CBK rates, and global shifts.
             </p>
-            
-            {/* Embedded Player Placeholder/Link */}
-            <div className="bg-background/5 border border-white/10 rounded-xl p-6 mb-8 backdrop-blur-md">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="font-bold text-white mb-1">Latest Episode</h3>
-                  <p className="text-sm text-secondary-foreground/60">Listen to the latest market insights</p>
-                </div>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-8 backdrop-blur-md">
+              <div className="mb-4">
+                <h3 className="font-bold text-white mb-1">Latest Episode</h3>
+                <p className="text-sm text-white/60">Listen to the latest market insights</p>
               </div>
-              <a 
-                href="https://marketcolourpodcast.buzzsprout.com" 
-                target="_blank" 
+              <a
+                href="https://marketcolourpodcast.buzzsprout.com"
+                target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center w-full bg-primary text-primary-foreground py-4 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
+                className="flex items-center justify-center w-full bg-[#c9a227] text-[#0f2337] py-4 rounded-lg font-bold hover:bg-[#b8911e] transition-colors"
               >
                 Listen on Buzzsprout <ArrowRight className="ml-2 h-4 w-4" />
               </a>

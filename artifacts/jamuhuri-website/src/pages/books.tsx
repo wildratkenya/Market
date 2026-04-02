@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Filter, Search } from "lucide-react";
+import { ArrowRight, BookOpen, Filter, Search, Package, Monitor } from "lucide-react";
 import { useListBooks, getListBooksQueryKey, useCreateOrder } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -58,11 +57,15 @@ export default function Books() {
     book.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleOrderClick = (book: Book) => {
+  const handleOrderClick = (book: Book, type: "hardcopy" | "ebook") => {
     setSelectedBook(book);
     form.reset({
-      ...form.getValues(),
-      orderType: book.type === "ebook" ? "ebook" : "hardcopy",
+      customerName: "",
+      customerEmail: "",
+      orderType: type,
+      customerPhone: "",
+      deliveryAddress: "",
+      deliveryCity: "",
     });
     setIsOrderModalOpen(true);
   };
@@ -166,10 +169,17 @@ export default function Books() {
                       alt={book.title}
                       className="object-contain w-full h-full drop-shadow-2xl group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-background/90 text-foreground backdrop-blur-sm border-none shadow-sm font-semibold">
-                        {book.type === 'both' ? 'Print & Digital' : book.type === 'ebook' ? 'E-Book' : 'Hardcopy'}
-                      </Badge>
+                    <div className="absolute top-4 right-4 flex gap-1 flex-col">
+                      {(book.type === 'hardcopy' || book.type === 'both') && (
+                        <Badge className="bg-orange-100 text-orange-800 border-none shadow-sm font-semibold text-xs">
+                          Hard Copy
+                        </Badge>
+                      )}
+                      {(book.type === 'ebook' || book.type === 'both') && (
+                        <Badge className="bg-blue-100 text-blue-800 border-none shadow-sm font-semibold text-xs">
+                          Digital
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   <CardContent className="flex-1 flex flex-col p-8 bg-background z-10 relative">
@@ -184,19 +194,30 @@ export default function Books() {
                     </p>
                     
                     <div className="border-t border-border/50 pt-6 mt-auto">
-                      <div className="flex flex-col gap-4">
-                        <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-muted-foreground">Price from</span>
                           <span className="font-mono text-xl font-bold text-foreground">
                             {book.hardcopyPrice ? `${book.currency} ${book.hardcopyPrice.toLocaleString()}` : 'Varies'}
                           </span>
                         </div>
-                        <Button 
-                          onClick={() => handleOrderClick(book)}
-                          className="w-full text-base py-6"
-                        >
-                          Order Book
-                        </Button>
+                        {(book.type === 'hardcopy' || book.type === 'both') && (
+                          <Button
+                            onClick={() => handleOrderClick(book, "hardcopy")}
+                            className="w-full text-sm py-5 bg-[#0f2337] hover:bg-[#0f2337]/90 text-white font-semibold gap-2"
+                          >
+                            <Package className="h-4 w-4" /> Order Hard Copy
+                          </Button>
+                        )}
+                        {(book.type === 'ebook' || book.type === 'both') && (
+                          <Button
+                            onClick={() => handleOrderClick(book, "ebook")}
+                            variant="outline"
+                            className="w-full text-sm py-5 border-blue-300 text-blue-700 hover:bg-blue-50 font-semibold gap-2"
+                          >
+                            <Monitor className="h-4 w-4" /> Order Digital Copy
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -248,31 +269,18 @@ export default function Books() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="orderType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Format Preference</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select format" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {(selectedBook?.type === 'hardcopy' || selectedBook?.type === 'both') && (
-                            <SelectItem value="hardcopy">Physical Hardcopy</SelectItem>
-                          )}
-                          {(selectedBook?.type === 'ebook' || selectedBook?.type === 'both') && (
-                            <SelectItem value="ebook">Digital E-Book</SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="rounded-lg border border-border/60 bg-muted/30 p-4 flex items-center gap-3">
+                  {watchOrderType === "hardcopy"
+                    ? <Package className="h-5 w-5 text-[#0f2337]" />
+                    : <Monitor className="h-5 w-5 text-blue-600" />
+                  }
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Format</p>
+                    <p className="font-bold text-foreground">
+                      {watchOrderType === "hardcopy" ? "Hard Copy (Physical Delivery)" : "Digital Copy (Sent by Email)"}
+                    </p>
+                  </div>
+                </div>
 
                 {watchOrderType === 'hardcopy' && (
                   <motion.div 

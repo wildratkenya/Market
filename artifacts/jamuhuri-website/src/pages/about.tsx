@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useCreateSubscriber } from "@workspace/api-client-react";
+import authorPhoto from "@assets/Jamuhuri-Gachoroba_Author_1775134573954.jpg";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -106,7 +107,7 @@ export default function About() {
             >
               <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-[#0f2337] flex items-center justify-center relative">
                 <img
-                  src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&q=80"
+                  src={authorPhoto}
                   alt="Jamuhuri Gachoroba"
                   className="w-full h-full object-cover"
                 />
