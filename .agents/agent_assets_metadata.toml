@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "ouT6biuHK9hVma3c6EEIB"
+uri = "file://artifacts/jamuhuri-website/public/images/hero-bg.png"
+type = "image"
+title = "Nairobi skyline abstract background"
+
+[[generated]]
+id = "BEfTo8lnIi7BIrOl0-4np"
+uri = "file://artifacts/jamuhuri-website/public/images/author-portrait.png"
+type = "image"
+title = "Professional author portrait"
+
+[[generated]]
+id = "wAawLHEkAnF9K5lNqRyhg"
+uri = "file://artifacts/jamuhuri-website/public/images/book-cover-markets.png"
+type = "image"
+title = "Money markets book cover"
+
+[[generated]]
+id = "uChHb0Cusff4C08RzLcZ2"
+uri = "file://artifacts/jamuhuri-website/public/images/markets-abstract.png"
+type = "image"
+title = "Global money markets abstract"

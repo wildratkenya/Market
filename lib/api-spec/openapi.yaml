@@ -1,15 +1,24 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Jamuhuri Gachoroba Author & Podcast API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: books
+    description: Book catalog and management
+  - name: orders
+    description: Book order management
+  - name: podcasts
+    description: Podcast episode management
+  - name: subscribers
+    description: Podcast subscriber management
+  - name: messages
+    description: Backend messages
 paths:
   /healthz:
     get:
@@ -24,6 +33,208 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /books:
+    get:
+      operationId: listBooks
+      tags: [books]
+      summary: List all books
+      responses:
+        "200":
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Book"
+
+  /books/{id}:
+    get:
+      operationId: getBook
+      tags: [books]
+      summary: Get a single book by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Book found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "404":
+          description: Book not found
+
+  /orders:
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create a new book order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderBody"
+      responses:
+        "201":
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: Invalid request
+
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List all orders (admin)
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get a single order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Order found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /podcasts:
+    get:
+      operationId: listPodcasts
+      tags: [podcasts]
+      summary: List all podcast episodes
+      responses:
+        "200":
+          description: List of podcast episodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Podcast"
+
+  /podcasts/latest:
+    get:
+      operationId: getLatestPodcasts
+      tags: [podcasts]
+      summary: Get the latest 3 podcast episodes
+      responses:
+        "200":
+          description: Latest podcast episodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Podcast"
+
+  /subscribers:
+    post:
+      operationId: createSubscriber
+      tags: [subscribers]
+      summary: Register a new podcast subscriber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubscriberBody"
+      responses:
+        "201":
+          description: Subscriber registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscriber"
+        "409":
+          description: Already subscribed
+
+    get:
+      operationId: listSubscribers
+      tags: [subscribers]
+      summary: List all subscribers (admin)
+      responses:
+        "200":
+          description: Subscriber list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subscriber"
+
+  /messages:
+    post:
+      operationId: createMessage
+      tags: [messages]
+      summary: Save a backend contact/order message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMessageBody"
+      responses:
+        "201":
+          description: Message saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+    get:
+      operationId: listMessages
+      tags: [messages]
+      summary: List all backend messages (admin)
+      responses:
+        "200":
+          description: Messages list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+
+  /stats/summary:
+    get:
+      operationId: getStatsSummary
+      tags: [books]
+      summary: Get site summary stats
+      responses:
+        "200":
+          description: Stats summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +245,283 @@ components:
       required:
         - status
 
+    Book:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        subtitle:
+          type: string
+          nullable: true
+        description:
+          type: string
+        author:
+          type: string
+        coverImage:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [hardcopy, ebook, both]
+        hardcopyPrice:
+          type: number
+          nullable: true
+        ebookPrice:
+          type: number
+          nullable: true
+        currency:
+          type: string
+        isLatest:
+          type: boolean
+        publishedYear:
+          type: integer
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - author
+        - type
+        - currency
+        - isLatest
+        - createdAt
+
+    CreateOrderBody:
+      type: object
+      properties:
+        bookId:
+          type: integer
+        bookTitle:
+          type: string
+        orderType:
+          type: string
+          enum: [hardcopy, ebook]
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+        customerPhone:
+          type: string
+          nullable: true
+        deliveryAddress:
+          type: string
+          nullable: true
+        deliveryCity:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required:
+        - bookId
+        - bookTitle
+        - orderType
+        - customerName
+        - customerEmail
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        bookTitle:
+          type: string
+        orderType:
+          type: string
+          enum: [hardcopy, ebook]
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+          nullable: true
+        deliveryAddress:
+          type: string
+          nullable: true
+        deliveryCity:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, confirmed, shipped, delivered, cancelled]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookId
+        - bookTitle
+        - orderType
+        - customerName
+        - customerEmail
+        - status
+        - createdAt
+
+    Podcast:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        audioUrl:
+          type: string
+          nullable: true
+        buzzsproutUrl:
+          type: string
+          nullable: true
+        duration:
+          type: string
+          nullable: true
+        episodeNumber:
+          type: integer
+          nullable: true
+        season:
+          type: integer
+          nullable: true
+        publishedAt:
+          type: string
+          format: date-time
+        thumbnailUrl:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - tags
+        - publishedAt
+        - createdAt
+
+    CreateSubscriberBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        wantsWhatsapp:
+          type: boolean
+      required:
+        - name
+        - email
+        - wantsWhatsapp
+
+    Subscriber:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        wantsWhatsapp:
+          type: boolean
+        whatsappApproved:
+          type: boolean
+        subscribedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - wantsWhatsapp
+        - whatsappApproved
+        - subscribedAt
+
+    CreateMessageBody:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [order, contact, subscription]
+        subject:
+          type: string
+        body:
+          type: string
+        senderEmail:
+          type: string
+          nullable: true
+      required:
+        - type
+        - subject
+        - body
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [order, contact, subscription]
+        subject:
+          type: string
+        body:
+          type: string
+        senderEmail:
+          type: string
+          nullable: true
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - subject
+        - body
+        - createdAt
+
+    StatsSummary:
+      type: object
+      properties:
+        totalBooks:
+          type: integer
+        totalOrders:
+          type: integer
+        totalSubscribers:
+          type: integer
+        totalPodcasts:
+          type: integer
+      required:
+        - totalBooks
+        - totalOrders
+        - totalSubscribers
+        - totalPodcasts

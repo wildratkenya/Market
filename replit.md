@@ -4,6 +4,35 @@
 
 pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
+## Jamuhuri Gachoroba - Author & Podcast Website
+
+A full professional website for Jamuhuri Gachoroba — Kenyan financial expert, author, and podcast host.
+
+### Key Features
+- Homepage with book showcase, podcast intro, latest episodes, markets section, and order info
+- About page with biography, The Market Colour Podcast info, and podcast subscription (with WhatsApp group request)
+- Books & Order page — physical copy (pay on delivery) and ebook ordering (sent to email itukarua2020@gmail.com)
+- Money Markets educational page with CBK rates, T-bill yields, NSE data, and episode listing
+- Full backend with PostgreSQL database for books, orders, subscribers, podcasts, and messages
+
+### Artifact: `jamuhuri-website` (react-vite, previewPath: /)
+
+### Backend Routes (api-server)
+- GET/POST `/api/books` — book catalog
+- GET/POST `/api/orders` — order management (hardcopy or ebook)
+- GET `/api/podcasts` — all podcast episodes
+- GET `/api/podcasts/latest` — latest 3 episodes
+- GET/POST `/api/subscribers` — podcast subscriber registration
+- GET/POST `/api/messages` — backend messages
+- GET `/api/stats/summary` — site stats
+
+### Podcast
+- The Market Colour Podcast: https://marketcolourpodcast.buzzsprout.com
+- Weekly episodes on global money markets and Kenyan economy
+
+### Order Email
+- Ebook orders notify: itukarua2020@gmail.com
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
