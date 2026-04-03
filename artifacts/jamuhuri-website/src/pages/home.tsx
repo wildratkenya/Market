@@ -20,10 +20,10 @@ export default function Home() {
         {/* Left Side: Book Intro */}
         <div className="flex-1 relative flex flex-col justify-center px-8 md:px-16 py-20 bg-[#0f2337] overflow-hidden">
           {/* Book cover background */}
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute inset-0 opacity-40 pointer-events-none">
             <img src={bookCoverImg} alt="" className="w-full h-full object-cover object-center" />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0f2337] via-[#0f2337]/90 to-[#0f2337]/60" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0f2337]/85 via-[#0f2337]/75 to-[#0f2337]/50" />
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -104,41 +104,48 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {podcasts?.map((podcast, i) => (
-              <motion.div
-                key={podcast.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-              >
-                <a
-                  href={podcast.buzzsproutUrl || "https://marketcolourpodcast.buzzsprout.com"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block group h-full"
+            {!podcasts ? (
+              [0, 1, 2].map((i) => (
+                <div key={i} className="h-56 bg-white/5 border border-white/10 rounded-xl animate-pulse" />
+              ))
+            ) : podcasts.length === 0 ? (
+              <p className="col-span-3 text-center text-white/50 py-12">No episodes available yet.</p>
+            ) : (
+              podcasts.map((podcast, i) => (
+                <motion.div
+                  key={podcast.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
                 >
-                  <Card className="h-full bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#c9a227]/40 transition-colors">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-2 mb-4 text-xs text-white/50 font-mono">
-                        <span>{new Date(podcast.publishedAt).toLocaleDateString()}</span>
-                        <span>•</span>
-                        <span>{podcast.duration || '45 min'}</span>
-                      </div>
-                      <h3 className="font-serif text-xl font-bold mb-3 text-white group-hover:text-[#c9a227] transition-colors">
-                        {podcast.title}
-                      </h3>
-                      <p className="text-white/60 text-sm line-clamp-3 mb-6">
-                        {podcast.description}
-                      </p>
-                      <div className="flex items-center text-[#c9a227] font-semibold text-sm">
-                        Listen Now <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </a>
-              </motion.div>
-            ))}
+                  <a
+                    href={podcast.buzzsproutUrl || "https://marketcolourpodcast.buzzsprout.com"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group h-full"
+                  >
+                    <Card className="h-full bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#c9a227]/40 transition-colors">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-2 mb-4 text-xs text-white/50 font-mono">
+                          <span>{new Date(podcast.publishedAt).toLocaleDateString()}</span>
+                          <span>•</span>
+                          <span>{podcast.duration || '45 min'}</span>
+                        </div>
+                        <h3 className="font-serif text-xl font-bold mb-3 text-white group-hover:text-[#c9a227] transition-colors">
+                          {podcast.title}
+                        </h3>
+                        <p className="text-white/60 text-sm line-clamp-3 mb-6">
+                          {podcast.description}
+                        </p>
+                        <div className="flex items-center text-[#c9a227] font-semibold text-sm">
+                          Listen Now <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </a>
+                </motion.div>
+              ))
+            )}
           </div>
 
           <div className="text-center mt-10">
@@ -171,11 +178,16 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl mx-auto">
             {/* Hard Copy Sample */}
+            {!books ? (
+              <>
+                <div className="h-96 bg-muted rounded-xl animate-pulse" />
+                <div className="h-96 bg-muted rounded-xl animate-pulse" />
+              </>
+            ) : null}
             {books?.[0] && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
                 <Card className="h-full flex flex-col overflow-hidden border-2 border-orange-200 hover:border-orange-400 transition-colors shadow-md">
@@ -216,8 +228,7 @@ export default function Home() {
             {books?.[1] && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
                 <Card className="h-full flex flex-col overflow-hidden border-2 border-blue-200 hover:border-blue-400 transition-colors shadow-md">
