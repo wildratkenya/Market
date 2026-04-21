@@ -74,4 +74,35 @@ router.post("/admin/change-password", requireAuth, async (req, res) => {
   res.json({ success: true });
 });
 
+// User Management (Super Admin only)
+router.get("/admin/users", requireAuth, async (req, res) => {
+  if (req.adminUser?.role !== "super_admin") {
+    res.status(403).json({ error: "Super admin required" });
+    return;
+  }
+  const users = await db.select().from(adminUsersTable);
+  res.json(users.map(u => ({ id: u.id, username: u.username, email: u.email, role: u.role, createdAt: u.createdAt })));
+});
+
+router.post("/admin/users", requireAuth, async (req, res) => {
+  if (req.adminUser?.role !== "super_admin") {
+    res.status(403).json({ error: "Super admin required" });
+    return;
+  }
+  const { username, email, password, role } = req.body;
+  if (!username || !email || !password || !role) {
+    res.status(400).json({ error: "Missing fields" });
+    return;
+  }
+  
+  const [user] = await db.insert(adminUsersTable).values({
+    username,
+    email,
+    passwordHash: hashPassword(password),
+    role: role as any,
+  }).returning();
+  
+  res.status(201).json({ id: user.id, username: user.username, email: user.email, role: user.role });
+});
+
 export default router;

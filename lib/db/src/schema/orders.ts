@@ -18,6 +18,9 @@ export const ordersTable = pgTable("orders", {
   deliveryCity: text("delivery_city"),
   status: orderStatusEnum("status").notNull().default("pending"),
   notes: text("notes"),
+  quantity: integer("quantity").notNull().default(1),
+  totalAmount: text("total_amount"),
+  vatAmount: text("vat_amount"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

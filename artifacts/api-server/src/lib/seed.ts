@@ -39,19 +39,19 @@ const DEFAULT_ADMIN_USERS = [
   {
     username: "admin",
     email: "Admin@jumuhuri.com",
-    password: "admin123",
+    password: "J@muhuri",
     role: "super_admin" as const,
   },
   {
-    username: "jamuhuri",
-    email: "jamuhuri@jumuhuri.com",
-    password: "jamuhuri123",
+    username: "author",
+    email: "author@jumuhuri.com",
+    password: "author123",
     role: "editor" as const,
   },
   {
-    username: "market",
-    email: "market@jumuhuri.com",
-    password: "market123",
+    username: "viewer",
+    email: "viewer@jumuhuri.com",
+    password: "viewer123",
     role: "readonly" as const,
   },
 ];

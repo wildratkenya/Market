@@ -1,37 +1,36 @@
 import { Router, type IRouter } from "express";
-import { db } from "@workspace/db";
-import { podcastsTable } from "@workspace/db/schema";
-import { desc } from "drizzle-orm";
+import { fetchLatestPodcasts } from "../lib/data";
 
 const router: IRouter = Router();
 
 router.get("/podcasts", async (_req, res) => {
-  const podcasts = await db
-    .select()
-    .from(podcastsTable)
-    .orderBy(desc(podcastsTable.publishedAt));
-  res.json(
-    podcasts.map((p) => ({
-      ...p,
-      publishedAt: p.publishedAt.toISOString(),
-      createdAt: p.createdAt.toISOString(),
-    }))
-  );
+  try {
+    const podcasts = await fetchLatestPodcasts(100);
+    res.json(
+      podcasts.map((p) => ({
+        ...p,
+        publishedAt: p.publishedAt.toISOString(),
+        createdAt: p.createdAt.toISOString(),
+      }))
+    );
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch podcasts" });
+  }
 });
 
 router.get("/podcasts/latest", async (_req, res) => {
-  const podcasts = await db
-    .select()
-    .from(podcastsTable)
-    .orderBy(desc(podcastsTable.publishedAt))
-    .limit(3);
-  res.json(
-    podcasts.map((p) => ({
-      ...p,
-      publishedAt: p.publishedAt.toISOString(),
-      createdAt: p.createdAt.toISOString(),
-    }))
-  );
+  try {
+    const podcasts = await fetchLatestPodcasts(3);
+    res.json(
+      podcasts.map((p) => ({
+        ...p,
+        publishedAt: p.publishedAt.toISOString(),
+        createdAt: p.createdAt.toISOString(),
+      }))
+    );
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch latest podcasts" });
+  }
 });
 
 export default router;

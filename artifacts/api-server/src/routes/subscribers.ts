@@ -46,4 +46,27 @@ router.post("/subscribers", async (req, res) => {
   res.status(201).json({ ...subscriber, subscribedAt: subscriber.subscribedAt.toISOString() });
 });
 
+router.patch("/subscribers/:id/whatsapp", requireAuth, async (req, res) => {
+  if (req.adminUser?.role === "readonly") {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+  
+  const id = Number(req.params.id);
+  const { approved } = req.body;
+  
+  const [subscriber] = await db
+    .update(subscribersTable)
+    .set({ whatsappApproved: !!approved })
+    .where(eq(subscribersTable.id, id))
+    .returning();
+    
+  if (!subscriber) {
+    res.status(404).json({ error: "Subscriber not found" });
+    return;
+  }
+  
+  res.json({ ...subscriber, subscribedAt: subscriber.subscribedAt.toISOString() });
+});
+
 export default router;

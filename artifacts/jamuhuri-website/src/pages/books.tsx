@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Filter, Search, Package, Monitor } from "lucide-react";
+import { ArrowRight, BookOpen, Filter, Search, Package, Monitor, Minus, Plus } from "lucide-react";
 import bookCoverImg from "@assets/An_Introduction_to_Financial_Markets_1775134561365.png";
 import { useListBooks, getListBooksQueryKey, useCreateOrder } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ const orderSchema = z.object({
   customerPhone: z.string().optional(),
   deliveryAddress: z.string().optional(),
   deliveryCity: z.string().optional(),
+  quantity: z.number().min(1, "Minimum 1 copy"),
 }).superRefine((data, ctx) => {
   if (data.orderType === "hardcopy") {
     if (!data.customerPhone) {
@@ -50,6 +51,7 @@ export default function Books() {
       customerPhone: "",
       deliveryAddress: "",
       deliveryCity: "",
+      quantity: 1,
     },
   });
 
@@ -67,9 +69,21 @@ export default function Books() {
       customerPhone: "",
       deliveryAddress: "",
       deliveryCity: "",
+      quantity: 1,
     });
     setIsOrderModalOpen(true);
   };
+
+  const watchOrderType = form.watch("orderType");
+  const watchQuantity = form.watch("quantity") || 1;
+
+  const unitPrice = selectedBook 
+    ? (watchOrderType === "hardcopy" ? Number(selectedBook.hardcopyPrice || 0) : Number(selectedBook.ebookPrice || 0))
+    : 0;
+  
+  const totalPrice = unitPrice * watchQuantity;
+  const vatAmount = totalPrice * (16 / 116);
+  const subtotal = totalPrice - vatAmount;
 
   const onSubmit = (values: z.infer<typeof orderSchema>) => {
     if (!selectedBook) return;
@@ -85,6 +99,9 @@ export default function Books() {
           customerPhone: values.customerPhone,
           deliveryAddress: values.deliveryAddress,
           deliveryCity: values.deliveryCity,
+          quantity: values.quantity,
+          totalAmount: totalPrice.toFixed(2),
+          vatAmount: vatAmount.toFixed(2),
         }
       },
       {
@@ -106,8 +123,6 @@ export default function Books() {
       }
     );
   };
-
-  const watchOrderType = form.watch("orderType");
 
   return (
     <div className="w-full pb-24">
@@ -280,6 +295,62 @@ export default function Books() {
                     <p className="font-bold text-foreground">
                       {watchOrderType === "hardcopy" ? "Hard Copy (Physical Delivery)" : "Digital Copy (Sent by Email)"}
                     </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end border-y border-border/50 py-6">
+                  <FormField
+                    control={form.control}
+                    name="quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Quantity</FormLabel>
+                        <FormControl>
+                          <div className="flex items-center gap-4">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon" 
+                              className="h-10 w-10 shrink-0"
+                              onClick={() => field.onChange(Math.max(1, field.value - 1))}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <Input 
+                              type="number" 
+                              className="text-center h-10 text-lg font-bold" 
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                            />
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon" 
+                              className="h-10 w-10 shrink-0"
+                              onClick={() => field.onChange(field.value + 1)}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="space-y-2 text-right">
+                    <div className="flex justify-between items-center text-sm text-muted-foreground">
+                      <span>Subtotal (Excl. VAT)</span>
+                      <span>{selectedBook?.currency} {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-muted-foreground">
+                      <span>VAT (16% Inclusive)</span>
+                      <span>{selectedBook?.currency} {vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-lg font-bold text-foreground pt-2 border-t border-border/30">
+                      <span>Total Amount</span>
+                      <span className="text-[#c9a227]">{selectedBook?.currency} {totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
                   </div>
                 </div>
 

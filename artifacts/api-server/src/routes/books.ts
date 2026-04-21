@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 import { GetBookParams } from "@workspace/api-zod";
 import { z } from "zod";
 import { requireEditor, requireSuperAdmin } from "../middleware/admin-auth";
+import { fetchBooks } from "../lib/data";
+
 
 const router: IRouter = Router();
 
@@ -33,8 +35,12 @@ function serializeBook(b: typeof booksTable.$inferSelect) {
 }
 
 router.get("/books", async (req, res) => {
-  const books = await db.select().from(booksTable).orderBy(booksTable.createdAt);
-  res.json(books.map(serializeBook));
+  try {
+    const books = await fetchBooks();
+    res.json(books.map(serializeBook));
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch books" });
+  }
 });
 
 router.post("/books", requireEditor, async (req, res) => {

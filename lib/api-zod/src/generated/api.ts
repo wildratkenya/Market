@@ -141,6 +141,9 @@ export const CreateOrderBody = zod.object({
   deliveryAddress: zod.string().nullish(),
   deliveryCity: zod.string().nullish(),
   notes: zod.string().nullish(),
+  quantity: zod.number().default(1),
+  totalAmount: zod.string().nullish(),
+  vatAmount: zod.string().nullish(),
 });
 
 /**
@@ -164,6 +167,9 @@ export const ListOrdersResponseItem = zod.object({
     "cancelled",
   ]),
   notes: zod.string().nullish(),
+  quantity: zod.number(),
+  totalAmount: zod.string().nullish(),
+  vatAmount: zod.string().nullish(),
   createdAt: zod.coerce.date(),
 });
 export const ListOrdersResponse = zod.array(ListOrdersResponseItem);
@@ -193,6 +199,9 @@ export const GetOrderResponse = zod.object({
     "cancelled",
   ]),
   notes: zod.string().nullish(),
+  quantity: zod.number(),
+  totalAmount: zod.string().nullish(),
+  vatAmount: zod.string().nullish(),
   createdAt: zod.coerce.date(),
 });
 

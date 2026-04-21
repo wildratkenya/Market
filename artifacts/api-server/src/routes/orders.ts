@@ -41,6 +41,9 @@ router.post("/orders", async (req, res) => {
       deliveryAddress: data.deliveryAddress ?? null,
       deliveryCity: data.deliveryCity ?? null,
       notes: data.notes ?? null,
+      quantity: data.quantity ?? 1,
+      totalAmount: data.totalAmount ?? null,
+      vatAmount: data.vatAmount ?? null,
       status: "pending",
     })
     .returning();

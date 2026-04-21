@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Users, MessageSquare, RefreshCw, ChevronDown, ChevronUp,
   Package, Monitor, Check, Clock, BookOpen, Plus, Pencil, Trash2,
-  AlertCircle, Truck, CheckCircle2, XCircle, X, LogOut
+  AlertCircle, Truck, CheckCircle2, XCircle, X, LogOut, ShieldCheck
 } from "lucide-react";
 import { useAdminAuth } from "@/contexts/admin-auth-context";
 import {
@@ -532,7 +532,17 @@ function MessageRow({ msg }: { msg: { id: number; type: string; subject: string;
       </button>
       {expanded && (
         <div className="px-5 pb-5 pt-2 border-t border-border/50">
-          <pre className="text-sm text-foreground whitespace-pre-wrap font-sans leading-relaxed">{msg.body}</pre>
+          <pre className="text-sm text-foreground whitespace-pre-wrap font-sans leading-relaxed mb-4">{msg.body}</pre>
+          {!msg.readAt && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={(e) => { e.stopPropagation(); onMarkRead(); }}
+              className="text-xs h-8"
+            >
+              Mark as Read
+            </Button>
+          )}
         </div>
       )}
     </div>
@@ -540,7 +550,7 @@ function MessageRow({ msg }: { msg: { id: number; type: string; subject: string;
 }
 
 export default function Admin() {
-  const [tab, setTab] = useState<"books" | "orders" | "subscribers" | "messages">("orders");
+  const [tab, setTab] = useState<"books" | "orders" | "subscribers" | "messages" | "admins">("orders");
   const qc = useQueryClient();
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAdminAuth();
   const [, setLocation] = useLocation();
@@ -560,8 +570,9 @@ export default function Admin() {
     { id: "books" as const,       label: "Books",       icon: BookOpen,    count: books?.length },
     { id: "subscribers" as const, label: "Subscribers", icon: Users,       count: subscribers?.length },
     { id: "messages" as const,    label: "Messages",    icon: MessageSquare, count: messages?.length },
+    { id: "admins" as const,      label: "Manage Admins", icon: ShieldCheck,   count: undefined },
   ];
-  const tabs = isReadonly ? allTabs.filter((t) => t.id === "orders") : allTabs;
+  const tabs = isReadonly ? allTabs.filter((t) => t.id === "orders") : (user?.role === 'super_admin' ? allTabs : allTabs.filter(t => t.id !== 'admins'));
 
   if (authLoading) {
     return (
@@ -699,8 +710,42 @@ export default function Admin() {
                           <td className="p-4">
                             {sub.wantsWhatsapp
                               ? sub.whatsappApproved
-                                ? <Check className="h-4 w-4 text-green-500" />
-                                : <Clock className="h-4 w-4 text-yellow-500" />
+                                ? <div className="flex items-center gap-2">
+                                    <Check className="h-4 w-4 text-green-500" />
+                                    <Button 
+                                      size="xs" 
+                                      variant="ghost" 
+                                      className="h-6 px-1.5 text-[10px]"
+                                      onClick={() => {
+                                        fetch(`/api/subscribers/${sub.id}/whatsapp`, {
+                                          method: 'PATCH',
+                                          headers: { 
+                                            'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+                                            'Content-Type': 'application/json'
+                                          },
+                                          body: JSON.stringify({ approved: false })
+                                        }).then(() => qc.invalidateQueries({ queryKey: getListSubscribersQueryKey() }));
+                                      }}
+                                    >Revoke</Button>
+                                  </div>
+                                : <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-yellow-500" />
+                                    <Button 
+                                      size="xs" 
+                                      variant="secondary"
+                                      className="h-6 px-1.5 text-[10px] bg-green-500 text-white hover:bg-green-600"
+                                      onClick={() => {
+                                        fetch(`/api/subscribers/${sub.id}/whatsapp`, {
+                                          method: 'PATCH',
+                                          headers: { 
+                                            'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+                                            'Content-Type': 'application/json'
+                                          },
+                                          body: JSON.stringify({ approved: true })
+                                        }).then(() => qc.invalidateQueries({ queryKey: getListSubscribersQueryKey() }));
+                                      }}
+                                    >Approve</Button>
+                                  </div>
                               : <span className="text-muted-foreground">—</span>}
                           </td>
                           <td className="p-4 text-muted-foreground text-xs whitespace-nowrap">
@@ -727,10 +772,31 @@ export default function Admin() {
               ) : (
                 <div className="space-y-3">
                   {[...(messages || [])].reverse().map((msg) => (
-                    <MessageRow key={msg.id} msg={msg} />
+                    <MessageRow 
+                      key={msg.id} 
+                      msg={msg} 
+                      onMarkRead={() => {
+                        fetch(`/api/messages/${msg.id}/read`, { 
+                          method: 'PATCH', 
+                          headers: { 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` } 
+                        }).then(() => qc.invalidateQueries({ queryKey: getListMessagesQueryKey() }));
+                      }} 
+                    />
                   ))}
                 </div>
               )}
+            </motion.div>
+          )}
+          {tab === "admins" && (
+            <motion.div key="admins" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="bg-card border border-border rounded-xl overflow-hidden p-8 text-center">
+                <ShieldCheck className="h-12 w-12 mx-auto mb-4 text-[#c9a227]" />
+                <h3 className="text-xl font-bold mb-2">Admin Management</h3>
+                <p className="text-muted-foreground mb-6">As Super Admin, you can invite and manage other administrators here.</p>
+                <div className="max-w-md mx-auto p-6 border border-border rounded-xl bg-muted/20">
+                  <p className="text-sm italic">Feature note: You can currently manage admins via the direct database seeding. A full interactive admin manager UI is being finalized.</p>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

@@ -41,4 +41,29 @@ router.post("/messages", async (req, res) => {
   });
 });
 
+router.patch("/messages/:id/read", requireAuth, async (req, res) => {
+  if (req.adminUser?.role === "readonly") {
+    res.status(403).json({ error: "Insufficient permissions" });
+    return;
+  }
+  
+  const id = Number(req.params.id);
+  const [msg] = await db
+    .update(messagesTable)
+    .set({ readAt: new Date() })
+    .where(eq(messagesTable.id, id))
+    .returning();
+    
+  if (!msg) {
+    res.status(404).json({ error: "Message not found" });
+    return;
+  }
+  
+  res.json({
+    ...msg,
+    readAt: msg.readAt ? msg.readAt.toISOString() : null,
+    createdAt: msg.createdAt.toISOString(),
+  });
+});
+
 export default router;

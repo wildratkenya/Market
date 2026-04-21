@@ -59,7 +59,7 @@ export default function About() {
     <div className="bg-background text-foreground overflow-x-hidden">
 
       {/* Hero */}
-      <section className="relative min-h-[70vh] bg-[#0f2337] flex items-end pb-16 pt-36 overflow-hidden">
+      <section className="relative min-h-[50vh] bg-[#0f2337] flex items-end pb-12 pt-28 overflow-hidden">
         <div
           className="absolute inset-0 opacity-20"
           style={{
@@ -79,10 +79,9 @@ export default function About() {
             </motion.p>
             <motion.h1
               variants={fadeUp}
-              className="text-5xl md:text-7xl font-serif font-bold text-white leading-tight mb-6"
+              className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight mb-6"
             >
-              Jamuhuri<br />
-              <span className="text-[#c9a227] italic">Gachoroba</span>
+              Jamuhuri <span className="text-[#c9a227] italic">Gachoroba</span>
             </motion.h1>
             <motion.p
               variants={fadeUp}
