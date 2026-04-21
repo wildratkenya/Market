@@ -34,6 +34,30 @@ export interface Book {
   createdAt: string;
 }
 
+export type CreateBookBodyType =
+  (typeof CreateBookBodyType)[keyof typeof CreateBookBodyType];
+
+export const CreateBookBodyType = {
+  hardcopy: "hardcopy",
+  ebook: "ebook",
+  both: "both",
+} as const;
+
+export interface CreateBookBody {
+  title: string;
+  subtitle?: string | null;
+  description: string;
+  author: string;
+  coverImage?: string | null;
+  type: CreateBookBodyType;
+  hardcopyPrice?: number | null;
+  ebookPrice?: number | null;
+  currency: string;
+  isLatest: boolean;
+  publishedYear?: number | null;
+  category?: string | null;
+}
+
 export type CreateOrderBodyOrderType =
   (typeof CreateOrderBodyOrderType)[keyof typeof CreateOrderBodyOrderType];
 
@@ -51,6 +75,22 @@ export interface CreateOrderBody {
   customerPhone?: string | null;
   deliveryAddress?: string | null;
   deliveryCity?: string | null;
+  notes?: string | null;
+}
+
+export type UpdateOrderStatusBodyStatus =
+  (typeof UpdateOrderStatusBodyStatus)[keyof typeof UpdateOrderStatusBodyStatus];
+
+export const UpdateOrderStatusBodyStatus = {
+  pending: "pending",
+  confirmed: "confirmed",
+  shipped: "shipped",
+  delivered: "delivered",
+  cancelled: "cancelled",
+} as const;
+
+export interface UpdateOrderStatusBody {
+  status: UpdateOrderStatusBodyStatus;
   notes?: string | null;
 }
 
@@ -159,3 +199,7 @@ export interface StatsSummary {
   totalSubscribers: number;
   totalPodcasts: number;
 }
+
+export type DeleteBook200 = {
+  success: boolean;
+};

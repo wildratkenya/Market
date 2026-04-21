@@ -48,6 +48,25 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Book"
+    post:
+      operationId: createBook
+      tags: [books]
+      summary: Create a new book (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookBody"
+      responses:
+        "201":
+          description: Book created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Invalid request
 
   /books/{id}:
     get:
@@ -67,6 +86,55 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book"
+        "404":
+          description: Book not found
+    put:
+      operationId: updateBook
+      tags: [books]
+      summary: Update a book (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookBody"
+      responses:
+        "200":
+          description: Book updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "404":
+          description: Book not found
+    delete:
+      operationId: deleteBook
+      tags: [books]
+      summary: Delete a book (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Book deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
         "404":
           description: Book not found
 
@@ -123,6 +191,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Order"
+
+  /orders/{id}/status:
+    patch:
+      operationId: updateOrderStatus
+      tags: [orders]
+      summary: Update order status (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderStatusBody"
+      responses:
+        "200":
+          description: Order status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: Invalid status
+        "404":
+          description: Order not found
 
   /podcasts:
     get:
@@ -294,6 +391,48 @@ components:
         - isLatest
         - createdAt
 
+    CreateBookBody:
+      type: object
+      properties:
+        title:
+          type: string
+        subtitle:
+          type: string
+          nullable: true
+        description:
+          type: string
+        author:
+          type: string
+        coverImage:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [hardcopy, ebook, both]
+        hardcopyPrice:
+          type: number
+          nullable: true
+        ebookPrice:
+          type: number
+          nullable: true
+        currency:
+          type: string
+        isLatest:
+          type: boolean
+        publishedYear:
+          type: integer
+          nullable: true
+        category:
+          type: string
+          nullable: true
+      required:
+        - title
+        - description
+        - author
+        - type
+        - currency
+        - isLatest
+
     CreateOrderBody:
       type: object
       properties:
@@ -327,6 +466,18 @@ components:
         - orderType
         - customerName
         - customerEmail
+
+    UpdateOrderStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, confirmed, shipped, delivered, cancelled]
+        notes:
+          type: string
+          nullable: true
+      required:
+        - status
 
     Order:
       type: object

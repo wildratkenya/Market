@@ -37,6 +37,24 @@ export const ListBooksResponseItem = zod.object({
 export const ListBooksResponse = zod.array(ListBooksResponseItem);
 
 /**
+ * @summary Create a new book (admin)
+ */
+export const CreateBookBody = zod.object({
+  title: zod.string(),
+  subtitle: zod.string().nullish(),
+  description: zod.string(),
+  author: zod.string(),
+  coverImage: zod.string().nullish(),
+  type: zod.enum(["hardcopy", "ebook", "both"]),
+  hardcopyPrice: zod.number().nullish(),
+  ebookPrice: zod.number().nullish(),
+  currency: zod.string(),
+  isLatest: zod.boolean(),
+  publishedYear: zod.number().nullish(),
+  category: zod.string().nullish(),
+});
+
+/**
  * @summary Get a single book by ID
  */
 export const GetBookParams = zod.object({
@@ -58,6 +76,56 @@ export const GetBookResponse = zod.object({
   publishedYear: zod.number().nullish(),
   category: zod.string().nullish(),
   createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update a book (admin)
+ */
+export const UpdateBookParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateBookBody = zod.object({
+  title: zod.string(),
+  subtitle: zod.string().nullish(),
+  description: zod.string(),
+  author: zod.string(),
+  coverImage: zod.string().nullish(),
+  type: zod.enum(["hardcopy", "ebook", "both"]),
+  hardcopyPrice: zod.number().nullish(),
+  ebookPrice: zod.number().nullish(),
+  currency: zod.string(),
+  isLatest: zod.boolean(),
+  publishedYear: zod.number().nullish(),
+  category: zod.string().nullish(),
+});
+
+export const UpdateBookResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  subtitle: zod.string().nullish(),
+  description: zod.string(),
+  author: zod.string(),
+  coverImage: zod.string().nullish(),
+  type: zod.enum(["hardcopy", "ebook", "both"]),
+  hardcopyPrice: zod.number().nullish(),
+  ebookPrice: zod.number().nullish(),
+  currency: zod.string(),
+  isLatest: zod.boolean(),
+  publishedYear: zod.number().nullish(),
+  category: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a book (admin)
+ */
+export const DeleteBookParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteBookResponse = zod.object({
+  success: zod.boolean(),
 });
 
 /**
@@ -108,6 +176,45 @@ export const GetOrderParams = zod.object({
 });
 
 export const GetOrderResponse = zod.object({
+  id: zod.number(),
+  bookId: zod.number(),
+  bookTitle: zod.string(),
+  orderType: zod.enum(["hardcopy", "ebook"]),
+  customerName: zod.string(),
+  customerEmail: zod.string(),
+  customerPhone: zod.string().nullish(),
+  deliveryAddress: zod.string().nullish(),
+  deliveryCity: zod.string().nullish(),
+  status: zod.enum([
+    "pending",
+    "confirmed",
+    "shipped",
+    "delivered",
+    "cancelled",
+  ]),
+  notes: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update order status (admin)
+ */
+export const UpdateOrderStatusParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateOrderStatusBody = zod.object({
+  status: zod.enum([
+    "pending",
+    "confirmed",
+    "shipped",
+    "delivered",
+    "cancelled",
+  ]),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateOrderStatusResponse = zod.object({
   id: zod.number(),
   bookId: zod.number(),
   bookTitle: zod.string(),

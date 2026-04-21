@@ -8,11 +8,14 @@
 
 export * from "./book";
 export * from "./bookType";
+export * from "./createBookBody";
+export * from "./createBookBodyType";
 export * from "./createMessageBody";
 export * from "./createMessageBodyType";
 export * from "./createOrderBody";
 export * from "./createOrderBodyOrderType";
 export * from "./createSubscriberBody";
+export * from "./deleteBook200";
 export * from "./healthStatus";
 export * from "./message";
 export * from "./messageType";
@@ -22,3 +25,5 @@ export * from "./orderStatus";
 export * from "./podcast";
 export * from "./statsSummary";
 export * from "./subscriber";
+export * from "./updateOrderStatusBody";
+export * from "./updateOrderStatusBodyStatus";

@@ -19,12 +19,20 @@ A full professional website for Jamuhuri Gachoroba — Kenyan financial expert, 
 
 ### Backend Routes (api-server)
 - GET/POST `/api/books` — book catalog
+- GET/PUT/DELETE `/api/books/:id` — get, update, or delete a book (admin)
 - GET/POST `/api/orders` — order management (hardcopy or ebook)
+- PATCH `/api/orders/:id/status` — update order status (admin: pending/confirmed/shipped/delivered/cancelled)
 - GET `/api/podcasts` — all podcast episodes
 - GET `/api/podcasts/latest` — latest 3 episodes
 - GET/POST `/api/subscribers` — podcast subscriber registration
 - GET/POST `/api/messages` — backend messages
 - GET `/api/stats/summary` — site stats
+
+### Admin Panel (`/admin`)
+- **Orders tab** — filter by status (All / Pending / Confirmed / In Transit / Delivered / Cancelled), inline status dropdown per order
+- **Books tab** — list all books, Add Book form, Edit Book form, Delete book
+- **Subscribers tab** — full subscriber table with WhatsApp status
+- **Messages tab** — expandable message inbox
 
 ### Podcast
 - The Market Colour Podcast: https://marketcolourpodcast.buzzsprout.com

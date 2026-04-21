@@ -18,15 +18,18 @@ import type {
 
 import type {
   Book,
+  CreateBookBody,
   CreateMessageBody,
   CreateOrderBody,
   CreateSubscriberBody,
+  DeleteBook200,
   HealthStatus,
   Message,
   Order,
   Podcast,
   StatsSummary,
   Subscriber,
+  UpdateOrderStatusBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -180,6 +183,92 @@ export function useListBooks<
 }
 
 /**
+ * @summary Create a new book (admin)
+ */
+export const getCreateBookUrl = () => {
+  return `/api/books`;
+};
+
+export const createBook = async (
+  createBookBody: CreateBookBody,
+  options?: RequestInit,
+): Promise<Book> => {
+  return customFetch<Book>(getCreateBookUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createBookBody),
+  });
+};
+
+export const getCreateBookMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createBook>>,
+    TError,
+    { data: BodyType<CreateBookBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createBook>>,
+  TError,
+  { data: BodyType<CreateBookBody> },
+  TContext
+> => {
+  const mutationKey = ["createBook"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createBook>>,
+    { data: BodyType<CreateBookBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createBook(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateBookMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createBook>>
+>;
+export type CreateBookMutationBody = BodyType<CreateBookBody>;
+export type CreateBookMutationError = ErrorType<void>;
+
+/**
+ * @summary Create a new book (admin)
+ */
+export const useCreateBook = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createBook>>,
+    TError,
+    { data: BodyType<CreateBookBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createBook>>,
+  TError,
+  { data: BodyType<CreateBookBody> },
+  TContext
+> => {
+  return useMutation(getCreateBookMutationOptions(options));
+};
+
+/**
  * @summary Get a single book by ID
  */
 export const getGetBookUrl = (id: number) => {
@@ -255,6 +344,177 @@ export function useGetBook<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Update a book (admin)
+ */
+export const getUpdateBookUrl = (id: number) => {
+  return `/api/books/${id}`;
+};
+
+export const updateBook = async (
+  id: number,
+  createBookBody: CreateBookBody,
+  options?: RequestInit,
+): Promise<Book> => {
+  return customFetch<Book>(getUpdateBookUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createBookBody),
+  });
+};
+
+export const getUpdateBookMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateBook>>,
+    TError,
+    { id: number; data: BodyType<CreateBookBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateBook>>,
+  TError,
+  { id: number; data: BodyType<CreateBookBody> },
+  TContext
+> => {
+  const mutationKey = ["updateBook"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateBook>>,
+    { id: number; data: BodyType<CreateBookBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateBook(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateBookMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateBook>>
+>;
+export type UpdateBookMutationBody = BodyType<CreateBookBody>;
+export type UpdateBookMutationError = ErrorType<void>;
+
+/**
+ * @summary Update a book (admin)
+ */
+export const useUpdateBook = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateBook>>,
+    TError,
+    { id: number; data: BodyType<CreateBookBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateBook>>,
+  TError,
+  { id: number; data: BodyType<CreateBookBody> },
+  TContext
+> => {
+  return useMutation(getUpdateBookMutationOptions(options));
+};
+
+/**
+ * @summary Delete a book (admin)
+ */
+export const getDeleteBookUrl = (id: number) => {
+  return `/api/books/${id}`;
+};
+
+export const deleteBook = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DeleteBook200> => {
+  return customFetch<DeleteBook200>(getDeleteBookUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteBookMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBook>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteBook>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteBook"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteBook>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteBook(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteBookMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteBook>>
+>;
+
+export type DeleteBookMutationError = ErrorType<void>;
+
+/**
+ * @summary Delete a book (admin)
+ */
+export const useDeleteBook = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBook>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteBook>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteBookMutationOptions(options));
+};
 
 /**
  * @summary Create a new book order
@@ -499,6 +759,93 @@ export function useGetOrder<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Update order status (admin)
+ */
+export const getUpdateOrderStatusUrl = (id: number) => {
+  return `/api/orders/${id}/status`;
+};
+
+export const updateOrderStatus = async (
+  id: number,
+  updateOrderStatusBody: UpdateOrderStatusBody,
+  options?: RequestInit,
+): Promise<Order> => {
+  return customFetch<Order>(getUpdateOrderStatusUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateOrderStatusBody),
+  });
+};
+
+export const getUpdateOrderStatusMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateOrderStatus>>,
+    TError,
+    { id: number; data: BodyType<UpdateOrderStatusBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateOrderStatus>>,
+  TError,
+  { id: number; data: BodyType<UpdateOrderStatusBody> },
+  TContext
+> => {
+  const mutationKey = ["updateOrderStatus"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateOrderStatus>>,
+    { id: number; data: BodyType<UpdateOrderStatusBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateOrderStatus(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateOrderStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateOrderStatus>>
+>;
+export type UpdateOrderStatusMutationBody = BodyType<UpdateOrderStatusBody>;
+export type UpdateOrderStatusMutationError = ErrorType<void>;
+
+/**
+ * @summary Update order status (admin)
+ */
+export const useUpdateOrderStatus = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateOrderStatus>>,
+    TError,
+    { id: number; data: BodyType<UpdateOrderStatusBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateOrderStatus>>,
+  TError,
+  { id: number; data: BodyType<UpdateOrderStatusBody> },
+  TContext
+> => {
+  return useMutation(getUpdateOrderStatusMutationOptions(options));
+};
 
 /**
  * @summary List all podcast episodes
