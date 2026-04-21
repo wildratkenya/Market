@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Users, MessageSquare, RefreshCw, ChevronDown, ChevronUp,
   Package, Monitor, Check, Clock, BookOpen, Plus, Pencil, Trash2,
-  AlertCircle, Truck, CheckCircle2, XCircle, X
+  AlertCircle, Truck, CheckCircle2, XCircle, X, LogOut
 } from "lucide-react";
+import { useAdminAuth } from "@/contexts/admin-auth-context";
 import {
   useListOrders, getListOrdersQueryKey,
   useListSubscribers, getListSubscribersQueryKey,
@@ -65,7 +67,12 @@ function OrderStatusDropdown({ orderId, currentStatus }: { orderId: number; curr
   const { toast } = useToast();
   const qc = useQueryClient();
   const updateStatus = useUpdateOrderStatus();
+  const { user } = useAdminAuth();
   const [loading, setLoading] = useState(false);
+
+  if (user?.role === "readonly") {
+    return <OrderStatusBadge status={currentStatus} />;
+  }
 
   const handleChange = async (newStatus: string) => {
     if (newStatus === currentStatus) return;
@@ -261,9 +268,12 @@ function BooksTab() {
   const deleteBook = useDeleteBook();
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAdminAuth();
   const [addOpen, setAddOpen] = useState(false);
   const [editBook, setEditBook] = useState<Book | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const canEdit = user?.role === "editor" || user?.role === "super_admin";
+  const canDelete = user?.role === "super_admin";
 
   const handleDelete = (book: Book) => {
     if (!window.confirm(`Delete "${book.title}"? This cannot be undone.`)) return;
@@ -303,9 +313,11 @@ function BooksTab() {
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold text-foreground">{books?.length ?? 0} Book{books?.length !== 1 ? "s" : ""} in catalog</h2>
-        <Button onClick={() => setAddOpen(true)} className="bg-[#c9a227] hover:bg-[#c9a227]/90 text-white gap-2">
-          <Plus className="h-4 w-4" /> Add Book
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setAddOpen(true)} className="bg-[#c9a227] hover:bg-[#c9a227]/90 text-white gap-2">
+            <Plus className="h-4 w-4" /> Add Book
+          </Button>
+        )}
       </div>
 
       {isLoading ? (
@@ -356,25 +368,29 @@ function BooksTab() {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setEditBook(book)}
-                  className="h-8 px-3 gap-1.5 text-xs"
-                >
-                  <Pencil className="h-3 w-3" /> Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDelete(book)}
-                  disabled={deletingId === book.id}
-                  className="h-8 px-3 gap-1.5 text-xs border-red-200 text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="h-3 w-3" /> {deletingId === book.id ? "…" : "Delete"}
-                </Button>
-              </div>
+              {canEdit && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditBook(book)}
+                    className="h-8 px-3 gap-1.5 text-xs"
+                  >
+                    <Pencil className="h-3 w-3" /> Edit
+                  </Button>
+                  {canDelete && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(book)}
+                      disabled={deletingId === book.id}
+                      className="h-8 px-3 gap-1.5 text-xs border-red-200 text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3" /> {deletingId === book.id ? "…" : "Delete"}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -526,6 +542,8 @@ function MessageRow({ msg }: { msg: { id: number; type: string; subject: string;
 export default function Admin() {
   const [tab, setTab] = useState<"books" | "orders" | "subscribers" | "messages">("orders");
   const qc = useQueryClient();
+  const { user, isAuthenticated, isLoading: authLoading, logout } = useAdminAuth();
+  const [, setLocation] = useLocation();
 
   const { data: stats } = useGetStatsSummary({ query: { queryKey: getGetStatsSummaryQueryKey() } });
   const { data: orders } = useListOrders({ query: { queryKey: getListOrdersQueryKey() } });
@@ -535,12 +553,33 @@ export default function Admin() {
 
   const pendingOrders = orders?.filter((o) => o.status === "pending").length ?? 0;
 
-  const tabs = [
+  const isReadonly = user?.role === "readonly";
+
+  const allTabs = [
     { id: "orders" as const,      label: "Orders",      icon: ShoppingBag, count: orders?.length,      alert: pendingOrders > 0 ? pendingOrders : undefined },
     { id: "books" as const,       label: "Books",       icon: BookOpen,    count: books?.length },
     { id: "subscribers" as const, label: "Subscribers", icon: Users,       count: subscribers?.length },
     { id: "messages" as const,    label: "Messages",    icon: MessageSquare, count: messages?.length },
   ];
+  const tabs = isReadonly ? allTabs.filter((t) => t.id === "orders") : allTabs;
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-4 border-[#c9a227] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    setLocation("/admin/login");
+    return null;
+  }
+
+  const handleLogout = () => {
+    logout();
+    setLocation("/admin/login");
+  };
 
   return (
     <div className="bg-background text-foreground min-h-screen">
@@ -551,15 +590,27 @@ export default function Admin() {
             <div>
               <p className="text-[#c9a227] text-sm font-semibold tracking-widest uppercase mb-2">Admin Panel</p>
               <h1 className="text-4xl font-serif font-bold text-white">Dashboard</h1>
-              <p className="text-white/60 mt-2">Manage books, orders, subscribers, and messages</p>
+              <p className="text-white/60 mt-2">
+                Signed in as <span className="text-white font-medium">{user?.username}</span>
+                {" "}<span className="text-[#c9a227] text-xs uppercase font-semibold tracking-wider">({user?.role?.replace("_", " ")})</span>
+              </p>
             </div>
-            <Button
-              onClick={() => qc.invalidateQueries()}
-              variant="outline"
-              className="border-white/20 text-white hover:bg-white/10"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => qc.invalidateQueries()}
+                variant="outline"
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="border-white/20 text-white hover:bg-red-500/20 hover:border-red-400/40"
+              >
+                <LogOut className="h-4 w-4 mr-2" /> Sign Out
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">

@@ -4,6 +4,7 @@ import { ordersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { CreateOrderBody, GetOrderParams } from "@workspace/api-zod";
 import { z } from "zod";
+import { requireAuth, requireEditor } from "../middleware/admin-auth";
 
 const router: IRouter = Router();
 
@@ -16,7 +17,7 @@ function serializeOrder(o: typeof ordersTable.$inferSelect) {
   return { ...o, createdAt: o.createdAt.toISOString() };
 }
 
-router.get("/orders", async (_req, res) => {
+router.get("/orders", requireAuth, async (_req, res) => {
   const orders = await db.select().from(ordersTable).orderBy(ordersTable.createdAt);
   res.json(orders.map(serializeOrder));
 });
@@ -47,7 +48,7 @@ router.post("/orders", async (req, res) => {
   res.status(201).json(serializeOrder(order));
 });
 
-router.get("/orders/:id", async (req, res) => {
+router.get("/orders/:id", requireAuth, async (req, res) => {
   const params = GetOrderParams.safeParse({ id: Number(req.params.id) });
   if (!params.success) {
     res.status(400).json({ error: "Invalid ID" });
@@ -61,7 +62,7 @@ router.get("/orders/:id", async (req, res) => {
   res.json(serializeOrder(order));
 });
 
-router.patch("/orders/:id/status", async (req, res) => {
+router.patch("/orders/:id/status", requireEditor, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     res.status(400).json({ error: "Invalid ID" });

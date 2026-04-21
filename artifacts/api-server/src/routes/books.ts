@@ -4,6 +4,7 @@ import { booksTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { GetBookParams } from "@workspace/api-zod";
 import { z } from "zod";
+import { requireEditor, requireSuperAdmin } from "../middleware/admin-auth";
 
 const router: IRouter = Router();
 
@@ -36,7 +37,7 @@ router.get("/books", async (req, res) => {
   res.json(books.map(serializeBook));
 });
 
-router.post("/books", async (req, res) => {
+router.post("/books", requireEditor, async (req, res) => {
   const parsed = BookBodySchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -77,7 +78,7 @@ router.get("/books/:id", async (req, res) => {
   res.json(serializeBook(book));
 });
 
-router.put("/books/:id", async (req, res) => {
+router.put("/books/:id", requireEditor, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     res.status(400).json({ error: "Invalid ID" });
@@ -114,7 +115,7 @@ router.put("/books/:id", async (req, res) => {
   res.json(serializeBook(book));
 });
 
-router.delete("/books/:id", async (req, res) => {
+router.delete("/books/:id", requireSuperAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     res.status(400).json({ error: "Invalid ID" });

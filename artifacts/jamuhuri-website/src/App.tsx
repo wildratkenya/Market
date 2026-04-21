@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,40 +10,55 @@ import Books from "@/pages/books";
 import Markets from "@/pages/markets";
 import Contact from "@/pages/contact";
 import Admin from "@/pages/admin";
+import AdminLogin from "@/pages/admin-login";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { AdminAuthProvider } from "@/contexts/admin-auth-context";
 
 const queryClient = new QueryClient();
 
-function Router() {
+function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1">
-        <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/about" component={About} />
-          <Route path="/books" component={Books} />
-          <Route path="/markets" component={Markets} />
-          <Route path="/contact" component={Contact} />
-          <Route path="/admin" component={Admin} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
+      <main className="flex-1">{children}</main>
       <Footer />
     </div>
+  );
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin">
+        {() => (
+          <PublicLayout>
+            <Admin />
+          </PublicLayout>
+        )}
+      </Route>
+      <Route path="/" component={() => <PublicLayout><Home /></PublicLayout>} />
+      <Route path="/about" component={() => <PublicLayout><About /></PublicLayout>} />
+      <Route path="/books" component={() => <PublicLayout><Books /></PublicLayout>} />
+      <Route path="/markets" component={() => <PublicLayout><Markets /></PublicLayout>} />
+      <Route path="/contact" component={() => <PublicLayout><Contact /></PublicLayout>} />
+      <Route component={() => <PublicLayout><NotFound /></PublicLayout>} />
+    </Switch>
   );
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
+      <AdminAuthProvider>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </AdminAuthProvider>
     </QueryClientProvider>
   );
 }

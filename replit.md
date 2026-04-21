@@ -18,21 +18,40 @@ A full professional website for Jamuhuri Gachoroba — Kenyan financial expert, 
 ### Artifact: `jamuhuri-website` (react-vite, previewPath: /)
 
 ### Backend Routes (api-server)
-- GET/POST `/api/books` — book catalog
-- GET/PUT/DELETE `/api/books/:id` — get, update, or delete a book (admin)
-- GET/POST `/api/orders` — order management (hardcopy or ebook)
-- PATCH `/api/orders/:id/status` — update order status (admin: pending/confirmed/shipped/delivered/cancelled)
-- GET `/api/podcasts` — all podcast episodes
-- GET `/api/podcasts/latest` — latest 3 episodes
-- GET/POST `/api/subscribers` — podcast subscriber registration
-- GET/POST `/api/messages` — backend messages
-- GET `/api/stats/summary` — site stats
+- GET `/api/books` — public book catalog
+- POST `/api/books` — create book (requireEditor)
+- GET/PUT `/api/books/:id` — get/update book (PUT: requireEditor)
+- DELETE `/api/books/:id` — delete book (requireSuperAdmin)
+- GET `/api/orders` — all orders (requireAuth)
+- POST `/api/orders` — place order (public)
+- PATCH `/api/orders/:id/status` — update status (requireEditor)
+- GET `/api/podcasts`, GET `/api/podcasts/latest` — public
+- GET `/api/subscribers` — subscribers list (requireAuth)
+- POST `/api/subscribers` — subscribe (public)
+- GET `/api/messages` — messages inbox (requireAuth)
+- POST `/api/messages` — send message (public)
+- GET `/api/stats/summary` — site stats (requireAuth)
+- POST `/api/admin/login` — admin login (returns signed token)
+- GET `/api/admin/me` — get current admin user (requireAuth)
+- POST `/api/admin/change-password` — change own password (requireAuth)
+
+### Startup Seeding
+- API server seeds `books` table if empty (2 default books)
+- API server seeds `admin_users` table if empty (3 default accounts)
+- This ensures production DB is populated on first deploy
 
 ### Admin Panel (`/admin`)
-- **Orders tab** — filter by status (All / Pending / Confirmed / In Transit / Delivered / Cancelled), inline status dropdown per order
-- **Books tab** — list all books, Add Book form, Edit Book form, Delete book
+- **Login required** — `/admin/login` (username or email + password). Token stored in localStorage (24h expiry).
+- **Roles (stored in `admin_users` DB table)**:
+  - `super_admin` (Admin@jumuhuri.com / admin123): full access — add/edit/delete books, update orders, view all tabs
+  - `editor` (jamuhuri / jamuhuri123): add/edit books, update order status, view all tabs (cannot delete books)
+  - `readonly` (market / market123): view orders only (no status change), no other tabs
+- **Orders tab** — filter by status, inline status dropdown per order (hidden for readonly)
+- **Books tab** — list all books, Add Book form, Edit Book form, Delete book (super_admin only)
 - **Subscribers tab** — full subscriber table with WhatsApp status
 - **Messages tab** — expandable message inbox
+- **Password change** — `POST /api/admin/change-password` (requires current password)
+- **Auth mechanism** — HMAC-SHA256 signed token (uses SESSION_SECRET), passwords hashed with PBKDF2
 
 ### Podcast
 - The Market Colour Podcast: https://marketcolourpodcast.buzzsprout.com

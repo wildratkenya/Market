@@ -3,10 +3,11 @@ import { db } from "@workspace/db";
 import { subscribersTable } from "@workspace/db/schema";
 import { CreateSubscriberBody } from "@workspace/api-zod";
 import { eq } from "drizzle-orm";
+import { requireAuth } from "../middleware/admin-auth";
 
 const router: IRouter = Router();
 
-router.get("/subscribers", async (_req, res) => {
+router.get("/subscribers", requireAuth, async (_req, res) => {
   const subs = await db.select().from(subscribersTable).orderBy(subscribersTable.subscribedAt);
   res.json(
     subs.map((s) => ({ ...s, subscribedAt: s.subscribedAt.toISOString() }))

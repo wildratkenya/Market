@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, BookOpen, Filter, Search, Package, Monitor } from "lucide-react";
+import bookCoverImg from "@assets/An_Introduction_to_Financial_Markets_1775134561365.png";
 import { useListBooks, getListBooksQueryKey, useCreateOrder } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -165,7 +166,7 @@ export default function Books() {
                 <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:shadow-lg transition-all duration-300">
                   <div className="aspect-[4/5] relative bg-muted overflow-hidden flex items-center justify-center p-8">
                     <img 
-                      src={book.coverImage || '/images/book-cover-markets.png'} 
+                      src={book.coverImage || bookCoverImg} 
                       alt={book.title}
                       className="object-contain w-full h-full drop-shadow-2xl group-hover:scale-105 transition-transform duration-500"
                     />

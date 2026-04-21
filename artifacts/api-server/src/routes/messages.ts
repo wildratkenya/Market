@@ -2,10 +2,11 @@ import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { messagesTable } from "@workspace/db/schema";
 import { CreateMessageBody } from "@workspace/api-zod";
+import { requireAuth } from "../middleware/admin-auth";
 
 const router: IRouter = Router();
 
-router.get("/messages", async (_req, res) => {
+router.get("/messages", requireAuth, async (_req, res) => {
   const msgs = await db.select().from(messagesTable).orderBy(messagesTable.createdAt);
   res.json(
     msgs.map((m) => ({
