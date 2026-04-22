@@ -50,7 +50,7 @@ export default function Contact() {
     <div className="bg-background text-foreground overflow-x-hidden">
 
       {/* Hero */}
-      <section className="relative bg-[#0f2337] pt-36 pb-20 overflow-hidden">
+      <section className="relative bg-[#0f2337] pt-24 pb-14 overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1600&q=80')", backgroundSize: "cover" }} />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0f2337]/50 to-[#0f2337]" />
         <div className="relative z-10 container mx-auto px-6 max-w-3xl text-center">

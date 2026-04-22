@@ -25,18 +25,29 @@ const BookBodySchema = z.object({
   category: z.string().nullable().optional(),
 });
 
-function serializeBook(b: typeof booksTable.$inferSelect) {
+function serializeBook(b: any) {
+  let dateString: string;
+  try {
+    const rawDate = b.createdAt || b.created_at || new Date();
+    const date = rawDate instanceof Date ? rawDate : new Date(rawDate);
+    dateString = isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+  } catch {
+    dateString = new Date().toISOString();
+  }
+  
   return {
     ...b,
+    id: b.id || b.bookId,
     hardcopyPrice: b.hardcopyPrice ? Number(b.hardcopyPrice) : null,
     ebookPrice: b.ebookPrice ? Number(b.ebookPrice) : null,
-    createdAt: b.createdAt.toISOString(),
+    createdAt: dateString,
   };
 }
 
 router.get("/books", async (req, res) => {
   try {
-    const books = await fetchBooks();
+    const { getBooks } = await import("../lib/data");
+    const books = await getBooks();
     res.json(books.map(serializeBook));
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch books" });
@@ -44,15 +55,15 @@ router.get("/books", async (req, res) => {
 });
 
 router.post("/books", requireEditor, async (req, res) => {
-  const parsed = BookBodySchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
-    return;
-  }
-  const data = parsed.data;
-  const [book] = await db
-    .insert(booksTable)
-    .values({
+  try {
+    const parsed = BookBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+      return;
+    }
+    const data = parsed.data;
+    const { insertBook } = await import("../lib/data");
+    const book = await insertBook({
       title: data.title,
       subtitle: data.subtitle ?? null,
       description: data.description,
@@ -65,40 +76,58 @@ router.post("/books", requireEditor, async (req, res) => {
       isLatest: data.isLatest,
       publishedYear: data.publishedYear ?? null,
       category: data.category ?? null,
-    })
-    .returning();
-  res.status(201).json(serializeBook(book));
+    });
+    res.status(201).json(serializeBook(book));
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create book" });
+  }
 });
 
 router.get("/books/:id", async (req, res) => {
-  const params = GetBookParams.safeParse({ id: Number(req.params.id) });
-  if (!params.success) {
-    res.status(400).json({ error: "Invalid ID" });
-    return;
+  try {
+    const params = GetBookParams.safeParse({ id: Number(req.params.id) });
+    if (!params.success) {
+      res.status(400).json({ error: "Invalid ID" });
+      return;
+    }
+    
+    const { supabase } = await import("../lib/supabase");
+    const { data: book, error } = await supabase.from('books').select('*').eq('id', params.data.id).maybeSingle();
+    
+    if (error || !book) {
+      res.status(404).json({ error: "Book not found" });
+      return;
+    }
+    
+    res.json(serializeBook({
+        ...book,
+        coverImage: book.cover_image,
+        hardcopyPrice: book.hardcopy_price,
+        ebookPrice: book.ebook_price,
+        isLatest: book.is_latest,
+        publishedYear: book.published_year,
+        createdAt: new Date(book.created_at)
+    } as any));
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch book" });
   }
-  const [book] = await db.select().from(booksTable).where(eq(booksTable.id, params.data.id));
-  if (!book) {
-    res.status(404).json({ error: "Book not found" });
-    return;
-  }
-  res.json(serializeBook(book));
 });
 
 router.put("/books/:id", requireEditor, async (req, res) => {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id <= 0) {
-    res.status(400).json({ error: "Invalid ID" });
-    return;
-  }
-  const parsed = BookBodySchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
-    return;
-  }
-  const data = parsed.data;
-  const [book] = await db
-    .update(booksTable)
-    .set({
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid ID" });
+      return;
+    }
+    const parsed = BookBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+      return;
+    }
+    const data = parsed.data;
+    const { updateBook } = await import("../lib/data");
+    const book = await updateBook(id, {
       title: data.title,
       subtitle: data.subtitle ?? null,
       description: data.description,
@@ -106,33 +135,31 @@ router.put("/books/:id", requireEditor, async (req, res) => {
       coverImage: data.coverImage ?? null,
       type: data.type,
       hardcopyPrice: data.hardcopyPrice != null ? String(data.hardcopyPrice) : null,
-      ebookPrice: data.ebookPrice != null ? String(data.ebookPrice) : null,
+      ebookPrice: data.ebook_price != null ? String(data.ebook_price) : null,
       currency: data.currency,
       isLatest: data.isLatest,
       publishedYear: data.publishedYear ?? null,
       category: data.category ?? null,
-    })
-    .where(eq(booksTable.id, id))
-    .returning();
-  if (!book) {
-    res.status(404).json({ error: "Book not found" });
-    return;
+    });
+    res.json(serializeBook(book));
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update book" });
   }
-  res.json(serializeBook(book));
 });
 
 router.delete("/books/:id", requireSuperAdmin, async (req, res) => {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id <= 0) {
-    res.status(400).json({ error: "Invalid ID" });
-    return;
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid ID" });
+      return;
+    }
+    const { deleteBook } = await import("../lib/data");
+    await deleteBook(id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete book" });
   }
-  const [book] = await db.delete(booksTable).where(eq(booksTable.id, id)).returning();
-  if (!book) {
-    res.status(404).json({ error: "Book not found" });
-    return;
-  }
-  res.json({ success: true });
 });
 
 export default router;

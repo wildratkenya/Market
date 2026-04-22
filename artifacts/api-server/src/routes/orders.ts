@@ -13,25 +13,45 @@ const UpdateStatusSchema = z.object({
   notes: z.string().nullable().optional(),
 });
 
-function serializeOrder(o: typeof ordersTable.$inferSelect) {
-  return { ...o, createdAt: o.createdAt.toISOString() };
+function serializeOrder(o: any) {
+  let dateString: string;
+  try {
+    const rawDate = o.createdAt || o.created_at || new Date();
+    const date = rawDate instanceof Date ? rawDate : new Date(rawDate);
+    dateString = isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+  } catch {
+    dateString = new Date().toISOString();
+  }
+  return { 
+    ...o, 
+    id: o.id,
+    createdAt: dateString 
+  };
 }
 
 router.get("/orders", requireAuth, async (_req, res) => {
-  const orders = await db.select().from(ordersTable).orderBy(ordersTable.createdAt);
-  res.json(orders.map(serializeOrder));
+  try {
+    const { getOrders } = await import("../lib/data");
+    const orders = await getOrders();
+    res.json(orders.map(o => ({
+      ...o,
+      createdAt: typeof o.createdAt === "string" ? o.createdAt : o.createdAt.toISOString()
+    })));
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 router.post("/orders", async (req, res) => {
-  const parsed = CreateOrderBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
-    return;
-  }
-  const data = parsed.data;
-  const [order] = await db
-    .insert(ordersTable)
-    .values({
+  try {
+    const parsed = CreateOrderBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+      return;
+    }
+    const data = parsed.data;
+    const { insertOrder } = await import("../lib/data");
+    const order = await insertOrder({
       bookId: data.bookId,
       bookTitle: data.bookTitle,
       orderType: data.orderType,
@@ -45,10 +65,16 @@ router.post("/orders", async (req, res) => {
       totalAmount: data.totalAmount ?? null,
       vatAmount: data.vatAmount ?? null,
       status: "pending",
-    })
-    .returning();
-
-  res.status(201).json(serializeOrder(order));
+    });
+    res.status(201).json(serializeOrder(order));
+  } catch (err: any) {
+    console.error("Order creation error:", err);
+    res.status(500).json({ 
+      error: "Internal server error", 
+      message: err.message || "Unknown error during order saving",
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
 });
 
 router.get("/orders/:id", requireAuth, async (req, res) => {

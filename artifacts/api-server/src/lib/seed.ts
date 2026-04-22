@@ -1,6 +1,8 @@
 import { db } from "@workspace/db";
 import { booksTable, adminUsersTable } from "@workspace/db/schema";
+import { eq } from "drizzle-orm";
 import { hashPassword } from "./token";
+import { supabase } from "./supabase";
 
 const DEFAULT_BOOKS = [
   {
@@ -38,8 +40,8 @@ const DEFAULT_BOOKS = [
 const DEFAULT_ADMIN_USERS = [
   {
     username: "admin",
-    email: "Admin@jumuhuri.com",
-    password: "J@muhuri",
+    email: "admin@jumuhuri.com",
+    password: "Jamuhuri",
     role: "super_admin" as const,
   },
   {
@@ -56,24 +58,94 @@ const DEFAULT_ADMIN_USERS = [
   },
 ];
 
-export async function seedDatabase(logger?: { info: (msg: string) => void }) {
-  const log = (msg: string) => logger?.info(msg) ?? console.log(msg);
+async function seedResilient(log: (m: string) => void) {
+  // Hardcoded stable hash for "Jamuhuri"
+  const passHash = "pbkdf2:c3678efbb5c432d30057397ee782648d:82038f72cff6c2ada2b0ea0a0d89eab83d9c66398cac31f08c244d9f20607effee2e06f60596bbbfb4fcebd6e84acd4a1405b7d5c2a6edaa90621c8555e9bf49";
 
-  const books = await db.select().from(booksTable);
-  if (books.length === 0) {
-    await db.insert(booksTable).values(DEFAULT_BOOKS);
-    log("Seeded default books");
-  }
+  log("Starting aggressive admin sync...");
+  try {
+    // 1. Drizzle path: DELETE ALL then INSERT
+    await db.delete(adminUsersTable);
+    log("Cleared all admins (Drizzle)");
+    
+    await db.insert(adminUsersTable).values({
+       username: "admin",
+       email: "admin@jumuhuri.com",
+       passwordHash: passHash,
+       role: "super_admin"
+    });
+    log("Created clean admin (Drizzle)");
+    
+  } catch (err) {
+    log("Drizzle aggressive sync failed, trying Supabase REST fallback...");
+    // 2. Supabase REST path: DELETE then INSERT
+    try {
+      const { error: delError } = await supabase
+        .from('admin_users')
+        .delete()
+        .or('username.eq.admin,email.eq.admin@jumuhuri.com');
+      
+      if (delError) log("Delete via REST failed (maybe no rows?), proceeding to insert anyway...");
 
-  const adminUsers = await db.select().from(adminUsersTable);
-  if (adminUsers.length === 0) {
-    const usersToInsert = DEFAULT_ADMIN_USERS.map(({ username, email, password, role }) => ({
-      username,
-      email,
-      passwordHash: hashPassword(password),
-      role,
-    }));
-    await db.insert(adminUsersTable).values(usersToInsert);
-    log("Seeded default admin users");
+      const { error: insError } = await supabase
+        .from('admin_users')
+        .insert({
+          username: "admin",
+          email: "admin@jumuhuri.com",
+          password_hash: passHash,
+          role: "super_admin"
+        });
+      
+      if (insError) throw insError;
+      log("Created clean admin (Supabase REST)");
+    } catch (restErr) {
+       log(`Fatal: Sync failed: ${restErr.message}`);
+       throw restErr;
+    }
   }
 }
+
+export async function forceResetAdmin() {
+  await seedResilient(console.log);
+}
+
+export async function seedDatabase({ info }: { info: (msg: string) => void }) {
+  await seedResilient(info);
+  
+  // Resilient Books Seeding
+  try {
+    const books = await db.select().from(booksTable);
+    if (books.length === 0) {
+      await db.insert(booksTable).values(DEFAULT_BOOKS as any);
+      info("Seeded default books (Drizzle)");
+    }
+  } catch (err) {
+    info("Drizzle books seeding failed, trying Supabase REST fallback...");
+    try {
+      const { data: existing, error: fetchErr } = await supabase.from('books').select('id');
+      if (!fetchErr && (!existing || existing.length === 0)) {
+        // Map camelCase to snake_case for REST insert
+        const restBooks = DEFAULT_BOOKS.map(b => ({
+          title: b.title,
+          subtitle: b.subtitle,
+          description: b.description,
+          author: b.author,
+          cover_image: b.coverImage,
+          type: b.type,
+          hardcopy_price: b.hardcopyPrice,
+          ebook_price: b.ebookPrice,
+          currency: b.currency,
+          is_latest: b.isLatest,
+          published_year: b.publishedYear,
+          category: b.category
+        }));
+        const { error: insErr } = await supabase.from('books').insert(restBooks);
+        if (insErr) throw insErr;
+        info("Seeded default books (Supabase REST)");
+      }
+    } catch (restErr) {
+      info(`Fatal: Books seeding failed: ${restErr.message}`);
+    }
+  }
+}
+

@@ -127,7 +127,7 @@ export default function Books() {
   return (
     <div className="w-full pb-24">
       {/* Header */}
-      <section className="bg-secondary text-white pt-24 pb-32">
+      <section className="bg-secondary text-white pt-16 pb-20">
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

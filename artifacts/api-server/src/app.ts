@@ -3,6 +3,8 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import path from "path";
+import fs from "fs";
 
 const app: Express = express();
 
@@ -27,8 +29,21 @@ app.use(
 );
 app.use(cors());
 app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
 
+const imagesPath = path.resolve(process.cwd(), "public/images");
+
+console.log(`[Static] Serving images from: ${imagesPath}`);
+if (!fs.existsSync(imagesPath)) {
+  try {
+    fs.mkdirSync(imagesPath, { recursive: true });
+  } catch (err) {
+    console.error(`[Static] Failed to create images directory: ${err}`);
+  }
+}
+
+app.use("/images", express.static(imagesPath));
 app.use("/api", router);
 
 export default app;

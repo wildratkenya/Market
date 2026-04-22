@@ -236,8 +236,63 @@ function BookFormDialog({
                 <Input value={form.ebookPrice} onChange={set("ebookPrice")} placeholder="e.g. 800" type="number" />
               </div>
               <div className="md:col-span-2 space-y-1.5">
-                <Label>Cover Image URL</Label>
-                <Input value={form.coverImage} onChange={set("coverImage")} placeholder="https://..." />
+                <Label>Cover Image</Label>
+                <div className="flex gap-4 items-start">
+                  {form.coverImage && (
+                    <div className="w-20 h-28 rounded border border-border overflow-hidden shrink-0 bg-muted">
+                      <img src={form.coverImage.startsWith('/') ? form.coverImage : form.coverImage} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-3">
+                    <Input 
+                      value={form.coverImage} 
+                      onChange={set("coverImage")} 
+                      placeholder="Paste image URL or upload below..." 
+                    />
+                    <div className="flex items-center gap-2">
+                       <Input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        id="cover-upload" 
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          
+                          const formData = new FormData();
+                          formData.append("image", file);
+                          
+                          try {
+                            const { token } = JSON.parse(localStorage.getItem("adminToken") || '{}');
+                            const res = await fetch("/api/upload", {
+                              method: "POST",
+                              headers: {
+                                "Authorization": `Bearer ${token || localStorage.getItem("adminToken")}`
+                              },
+                              body: formData
+                            });
+                            
+                            if (!res.ok) throw new Error("Upload failed");
+                            const data = await res.json();
+                            setForm(f => ({ ...f, coverImage: data.url }));
+                          } catch (err) {
+                            toast({ variant: "destructive", title: "Upload failed", description: "Could not upload the image." });
+                          }
+                        }}
+                      />
+                      <Button 
+                        type="button" 
+                        variant="secondary" 
+                        size="sm" 
+                        className="h-9 gap-2"
+                        onClick={() => document.getElementById("cover-upload")?.click()}
+                      >
+                        <Plus className="h-4 w-4" /> Upload Image
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground italic">Saved in /public/images</p>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="md:col-span-2 flex items-center gap-3">
                 <input

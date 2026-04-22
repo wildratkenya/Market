@@ -54,3 +54,8 @@ Thumbs.db
 !.env.example
 *.secrets
 secrets.json
+
+# System & Config
+.config/
+.agents/
+.local/

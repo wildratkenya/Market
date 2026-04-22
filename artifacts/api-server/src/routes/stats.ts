@@ -7,17 +7,13 @@ import { requireAuth } from "../middleware/admin-auth";
 const router: IRouter = Router();
 
 router.get("/stats/summary", requireAuth, async (_req, res) => {
-  const [booksCount] = await db.select({ count: sql<number>`count(*)::int` }).from(booksTable);
-  const [ordersCount] = await db.select({ count: sql<number>`count(*)::int` }).from(ordersTable);
-  const [subscribersCount] = await db.select({ count: sql<number>`count(*)::int` }).from(subscribersTable);
-  const [podcastsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(podcastsTable);
-
-  res.json({
-    totalBooks: booksCount.count,
-    totalOrders: ordersCount.count,
-    totalSubscribers: subscribersCount.count,
-    totalPodcasts: podcastsCount.count,
-  });
+  try {
+    const { getStats } = await import("../lib/data");
+    const stats = await getStats();
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 export default router;

@@ -8,10 +8,18 @@ import { requireAuth } from "../middleware/admin-auth";
 const router: IRouter = Router();
 
 router.get("/subscribers", requireAuth, async (_req, res) => {
-  const subs = await db.select().from(subscribersTable).orderBy(subscribersTable.subscribedAt);
-  res.json(
-    subs.map((s) => ({ ...s, subscribedAt: s.subscribedAt.toISOString() }))
-  );
+  try {
+    const { getSubscribers } = await import("../lib/data");
+    const subs = await getSubscribers();
+    res.json(
+      subs.map((s) => ({
+        ...s,
+        subscribedAt: typeof s.createdAt === "string" ? s.createdAt : s.createdAt.toISOString()
+      }))
+    );
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 router.post("/subscribers", async (req, res) => {
@@ -22,28 +30,16 @@ router.post("/subscribers", async (req, res) => {
   }
   const data = parsed.data;
 
-  const [existing] = await db
-    .select()
-    .from(subscribersTable)
-    .where(eq(subscribersTable.email, data.email));
-
-  if (existing) {
-    res.status(409).json({ error: "Already subscribed with this email" });
-    return;
-  }
-
-  const [subscriber] = await db
-    .insert(subscribersTable)
-    .values({
+  const { insertSubscriber } = await import("../lib/data");
+  const subscriber = await insertSubscriber({
       name: data.name,
       email: data.email,
       phone: data.phone ?? null,
       wantsWhatsapp: data.wantsWhatsapp,
       whatsappApproved: false,
-    })
-    .returning();
+    });
 
-  res.status(201).json({ ...subscriber, subscribedAt: subscriber.subscribedAt.toISOString() });
+  res.status(201).json(subscriber);
 });
 
 router.patch("/subscribers/:id/whatsapp", requireAuth, async (req, res) => {

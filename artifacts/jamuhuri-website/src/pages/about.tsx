@@ -48,10 +48,12 @@ export default function About() {
     e.preventDefault();
     if (!form.name || !form.email) return;
     subscribe({
-      name: form.name,
-      email: form.email,
-      phone: form.phone || undefined,
-      wantsWhatsapp: form.wantsWhatsapp,
+      data: {
+        name: form.name,
+        email: form.email,
+        phone: form.phone || undefined,
+        wantsWhatsapp: form.wantsWhatsapp,
+      }
     });
   };
 
@@ -59,7 +61,7 @@ export default function About() {
     <div className="bg-background text-foreground overflow-x-hidden">
 
       {/* Hero */}
-      <section className="relative min-h-[50vh] bg-[#0f2337] flex items-end pb-12 pt-28 overflow-hidden">
+      <section className="relative min-h-[35vh] bg-[#0f2337] flex items-end pb-8 pt-20 overflow-hidden">
         <div
           className="absolute inset-0 opacity-20"
           style={{
