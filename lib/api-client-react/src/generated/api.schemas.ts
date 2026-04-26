@@ -75,6 +75,9 @@ export interface CreateOrderBody {
   customerPhone?: string | null;
   deliveryAddress?: string | null;
   deliveryCity?: string | null;
+  quantity?: number | null;
+  totalAmount?: string | null;
+  vatAmount?: string | null;
   notes?: string | null;
 }
 

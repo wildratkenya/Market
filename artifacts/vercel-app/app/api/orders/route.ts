@@ -30,12 +30,28 @@ export async function GET() {
   return NextResponse.json(transformOrders(data || []));
 }
 
+function toSnakeCase(obj: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [
+      k.replace(/([A-Z])/g, "_$1").toLowerCase(),
+      v,
+    ])
+  );
+}
+
 export async function POST(request: NextRequest) {
   const supabase = getSupabase();
-  const body = await request.json();
-  const { data, error } = await supabase.from("orders").insert(body).select().single();
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  try {
+    const body = await request.json();
+    const snakeBody = toSnakeCase(body);
+    const { data, error } = await supabase.from("orders").insert(snakeBody).select().single();
+    if (error) {
+      console.error("Order insert error:", error);
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json(toCamelCase(data), { status: 201 });
+  } catch (e) {
+    console.error("Order parse error:", e);
+    return NextResponse.json({ error: String(e) }, { status: 400 });
   }
-  return NextResponse.json(toCamelCase(data), { status: 201 });
 }

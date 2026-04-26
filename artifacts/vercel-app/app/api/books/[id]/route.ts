@@ -63,13 +63,21 @@ export async function DELETE(
   const { id } = await params;
   const supabase = getSupabase();
   
+  const numId = Number(id);
+  
+  await supabase
+    .from("orders")
+    .delete()
+    .eq("book_id", numId);
+  
   const { error } = await supabase
     .from("books")
     .delete()
-    .eq("id", Number(id));
+    .eq("id", numId);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ success: true });
+  
+  return NextResponse.json({ success: true, deletedId: numId });
 }

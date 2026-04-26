@@ -443,7 +443,9 @@ export const deleteBook = async (
   id: number,
   options?: RequestInit,
 ): Promise<DeleteBook200> => {
-  return customFetch<DeleteBook200>(getDeleteBookUrl(id), {
+  const url = getDeleteBookUrl(id);
+  console.log("deleteBook calling:", url, "with method:", options?.method || "DELETE");
+  return customFetch<DeleteBook200>(url, {
     ...options,
     method: "DELETE",
   });

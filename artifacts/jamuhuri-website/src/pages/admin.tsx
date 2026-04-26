@@ -332,16 +332,19 @@ function BooksTab() {
 
   const handleDelete = (book: Book) => {
     if (!window.confirm(`Delete "${book.title}"? This cannot be undone.`)) return;
+    window.alert("Deleting book: " + book.id);
     setDeletingId(book.id);
     deleteBook.mutate(
       { id: book.id },
       {
         onSuccess: () => {
-          qc.invalidateQueries({ queryKey: getListBooksQueryKey() });
+          window.alert("Delete success!");
           qc.invalidateQueries({ queryKey: getGetStatsSummaryQueryKey() });
           toast({ title: "Book deleted", description: `"${book.title}" has been removed.` });
+          setTimeout(() => window.location.reload(), 500);
         },
-        onError: () => {
+        onError: (err) => {
+          window.alert("Delete error: " + JSON.stringify(err));
           toast({ variant: "destructive", title: "Delete failed", description: "Could not delete the book." });
         },
         onSettled: () => setDeletingId(null),
