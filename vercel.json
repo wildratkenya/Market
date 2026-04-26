@@ -1,0 +1,1 @@
+{"buildCommand": "cd artifacts/jamuhuri-website && pnpm exec vite build", "outputDirectory": "artifacts/jamuhuri-website/dist/public", "installCommand": "pnpm install"}

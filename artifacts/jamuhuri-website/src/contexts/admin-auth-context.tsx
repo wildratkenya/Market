@@ -47,7 +47,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     setAuthTokenGetter(() => token);
-    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+    const base = (import.meta.env.VITE_BASE_URL || "/").replace(/\/$/, "");
     fetch(`${base}/api/admin/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })

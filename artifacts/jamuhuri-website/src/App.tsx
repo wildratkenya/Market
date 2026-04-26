@@ -14,8 +14,18 @@ import AdminLogin from "@/pages/admin-login";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AdminAuthProvider } from "@/contexts/admin-auth-context";
+import { setBaseUrl } from "@workspace/api-client-react";
+
+import { setBaseUrl } from "@workspace/api-client-react";
+import { useEffect, useState } from "react";
 
 const queryClient = new QueryClient();
+
+const basePath = (import.meta.env.VITE_BASE_URL || "/").replace(/\/$/, "");
+
+if (typeof window !== "undefined") {
+  setBaseUrl("");
+}
 
 function PublicLayout({ children }: { children: ReactNode }) {
   return (
@@ -53,7 +63,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AdminAuthProvider>
         <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <WouterRouter base={(import.meta.env.VITE_BASE_URL || "/").replace(/\/$/, "")}>
             <Router />
           </WouterRouter>
           <Toaster />

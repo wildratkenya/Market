@@ -59,3 +59,5 @@ secrets.json
 .config/
 .agents/
 .local/
+
+.vercel

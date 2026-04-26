@@ -21,7 +21,7 @@ export default function AdminLogin() {
     setError(null);
     setIsLoading(true);
     try {
-      const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const base = (import.meta.env.VITE_BASE_URL || "/").replace(/\/$/, "");
       const res = await fetch(`${base}/api/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
