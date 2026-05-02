@@ -236,7 +236,11 @@ export default function Books() {
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-muted-foreground">Price from</span>
                           <span className="font-mono text-xl font-bold text-foreground">
-                            {book.hardcopyPrice ? `${book.currency} ${book.hardcopyPrice.toLocaleString()}` : 'Varies'}
+                            {book.hardcopyPrice
+                              ? `${book.currency} ${book.hardcopyPrice.toLocaleString()}`
+                              : book.ebookPrice
+                              ? `${book.currency} ${book.ebookPrice.toLocaleString()}`
+                              : 'Contact for price'}
                           </span>
                         </div>
                         <Button
