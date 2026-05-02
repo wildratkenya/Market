@@ -31,7 +31,15 @@ function PagesTab() {
       });
       if (res.ok) {
         const data = await res.json();
-        setFormData(data);
+        const parsed = pageId === "about" ? parseBodyContent(data.bodyContent || "") : null;
+        setFormData({
+          ...data,
+          ...(parsed ? {
+            bodyContent: parsed.bio,
+            visionContent: parsed.vision,
+            missionContent: parsed.mission,
+          } : {}),
+        });
       } else {
         setFormData({ pageName: pageId, pageTitle: pageId.charAt(0).toUpperCase() + pageId.slice(1) });
       }
@@ -46,17 +54,28 @@ function PagesTab() {
     if (!selectedPage) return;
     setSaving(true);
     try {
+      const payload = { ...formData };
+      if (selectedPage === "about") {
+        payload.bodyContent = combineBodyContent(
+          formData.bodyContent || "",
+          formData.visionContent || "",
+          formData.missionContent || "",
+        );
+        delete payload.visionContent;
+        delete payload.missionContent;
+      }
       const res = await fetch(`/api/pages/${selectedPage}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         toast({ title: "Page saved", description: "Content updated successfully." });
         qc.invalidateQueries({ queryKey: ["/api/pages"] });
+        qc.invalidateQueries({ queryKey: ["/api/pages", selectedPage] });
       } else {
         const err = await res.json();
         toast({ variant: "destructive", title: "Save failed", description: err.error || "Unknown error" });
@@ -68,15 +87,50 @@ function PagesTab() {
     }
   };
 
-  const fields: { key: string; label: string; type?: string }[] = [
-    { key: "pageTitle", label: "Page Title" },
-    { key: "heroTitle", label: "Hero Title" },
-    { key: "heroSubtitle", label: "Hero Subtitle" },
-    { key: "heroDescription", label: "Hero Description", type: "textarea" },
-    { key: "heroImage", label: "Hero Image URL" },
-    { key: "heroButtonText", label: "Hero Button Text" },
-    { key: "bodyContent", label: "Body Content", type: "textarea" },
-  ];
+function parseBodyContent(raw: string) {
+  const visionMatch = raw.match(/VISION:\s*([\s\S]*?)(?=MISSION:|$)/);
+  const missionMatch = raw.match(/MISSION:\s*([\s\S]*?)$/);
+  const vision = visionMatch ? visionMatch[1].trim() : "";
+  const mission = missionMatch ? missionMatch[1].trim() : "";
+  let bio = raw.replace(/BELIEF:[\s\S]*?(?=VISION:|$)/, "");
+  bio = bio.replace(/VISION:[\s\S]*?(?=MISSION:|$)/, "");
+  bio = bio.replace(/MISSION:[\s\S]*$/, "");
+  bio = bio.replace(/\n{2,}/g, "\n\n").trim();
+  return { bio, vision, mission };
+}
+
+function combineBodyContent(bio: string, vision: string, mission: string) {
+  const parts = [];
+  if (bio) parts.push(bio);
+  if (vision) parts.push("VISION:\n\n" + vision);
+  if (mission) parts.push("MISSION:\n\n" + mission);
+  return parts.join("\n\n");
+}
+
+const genericFields: { key: string; label: string; type?: string }[] = [
+  { key: "pageTitle", label: "Page Title" },
+  { key: "heroTitle", label: "Hero Title" },
+  { key: "heroSubtitle", label: "Hero Subtitle" },
+  { key: "heroDescription", label: "Hero Description", type: "textarea" },
+  { key: "heroImage", label: "Hero Image URL" },
+  { key: "heroButtonText", label: "Hero Button Text" },
+  { key: "footerContent", label: "Footer Content", type: "textarea" },
+  { key: "phone", label: "Phone" },
+  { key: "email", label: "Email" },
+  { key: "address", label: "Address", type: "textarea" },
+  { key: "socialLinks", label: "Social Links" },
+];
+
+const aboutFields: { key: string; label: string; type?: string }[] = [
+  ...genericFields,
+  { key: "bodyContent", label: "Bio Content", type: "textarea" },
+  { key: "visionContent", label: "Vision", type: "textarea" },
+  { key: "missionContent", label: "Mission", type: "textarea" },
+];
+
+function getFieldsForPage(pageId: string) {
+  return pageId === "about" ? aboutFields : genericFields;
+}
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -108,7 +162,7 @@ function PagesTab() {
         ) : selectedPage ? (
           <div className="bg-card border border-border rounded-xl p-6 space-y-4">
             <h3 className="text-lg font-bold capitalize">{formData.pageTitle || selectedPage}</h3>
-            {fields.map((f) => (
+            {getFieldsForPage(selectedPage).map((f) => (
               <div key={f.key} className="space-y-1">
                 <Label className="text-sm font-medium">{f.label}</Label>
                 {f.type === "textarea" ? (
