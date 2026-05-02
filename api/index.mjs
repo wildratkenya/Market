@@ -45,6 +45,7 @@ async function parseRSS(limit) {
   }
   return items;
 }
+function snakeToCamel(obj) {
   if (Array.isArray(obj)) return obj.map(snakeToCamel);
   if (obj === null || typeof obj !== 'object') return obj;
   const result = {};
