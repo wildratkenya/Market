@@ -21,6 +21,8 @@
     }
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.104.0",
+    "@types/node": "catalog:",
     "dotenv": "^17.4.2"
   }
 }
