@@ -1,6 +1,6 @@
 ﻿import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Headphones, TrendingUp, Package, Monitor } from "lucide-react";
+import { ArrowRight, BookOpen, Headphones, Package, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePage } from "@/hooks/use-page";
 import { useListBooks, getListBooksQueryKey, useGetLatestPodcasts, getGetLatestPodcastsQueryKey } from "@workspace/api-client-react";
@@ -260,36 +260,6 @@ export default function Home() {
             >
               All Episodes on Buzzsprout <ArrowRight className="h-4 w-4" />
             </a>
-          </div>
-        </div>
-      </section>
-
-      {/* Book Introduction */}
-      <section className="py-24 bg-white border-y border-border/30 relative overflow-hidden">
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl">
-            <Badge variant="outline" className="mb-6 border-primary/30 text-primary">From the Book</Badge>
-            <h2 className="text-4xl font-serif font-bold text-foreground mb-6">Introduction to Money Markets</h2>
-            <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-              <strong>Purpose:</strong> Promote financial literacy. Help you better understand how the financial markets operate.<br/><br/>
-              <strong>Target Audience:</strong> Retail investors, University students, Financial institutions and employees.<br/><br/>
-              <strong>Content:</strong> Part 1: Basic concepts and fundamental principles (interest rates and inflation). Part 2: The major financial markets (forex, stocks and bonds). Part 3: Financial market stories so that you learn from the past and avoid repeating the same mistakes.
-            </p>
-            <div className="grid grid-cols-2 gap-6 mb-10">
-              <div className="p-6 bg-background rounded-xl border border-border/50">
-                <TrendingUp className="h-8 w-8 text-primary mb-4" />
-                <h4 className="font-bold mb-2">Money Market Instruments</h4>
-                <p className="text-sm text-muted-foreground">T-Bills, commercial paper, certificates of deposit, and repos explained.</p>
-              </div>
-              <div className="p-6 bg-background rounded-xl border border-border/50">
-                <BookOpen className="h-8 w-8 text-primary mb-4" />
-                <h4 className="font-bold mb-2">For Everyone</h4>
-                <p className="text-sm text-muted-foreground">Written for both beginners and finance professionals seeking deeper understanding.</p>
-              </div>
-            </div>
-            <Button asChild size="lg">
-              <Link href="/books">Read More & Order <ArrowRight className="ml-2 h-4 w-4" /></Link>
-            </Button>
           </div>
         </div>
       </section>
