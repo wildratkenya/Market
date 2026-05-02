@@ -97,16 +97,14 @@ export default function About() {
       </section>
 
       {/* Bio Section */}
-      <section className="py-24 bg-background">
-        <div className="container mx-auto px-6 max-w-4xl">
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-6 max-w-3xl">
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="text-center mb-12"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            className="mb-10"
           >
-            <div className="w-64 h-64 mx-auto rounded-2xl overflow-hidden bg-[#0f2337] relative shadow-lg">
+            <div className="w-56 h-56 mx-auto rounded-2xl overflow-hidden bg-[#0f2337] relative shadow-lg">
               <img
                 src={authorPhoto}
                 alt="Jamuhuri Gachoroba"
@@ -121,16 +119,14 @@ export default function About() {
           </motion.div>
 
           <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={stagger}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
             className="text-center"
           >
-            <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-8">
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-8">
               A Voice for Financial Literacy in Kenya
-            </motion.h2>
-            <motion.div variants={fadeUp} className="space-y-4 text-muted-foreground leading-relaxed whitespace-pre-line text-left max-w-3xl mx-auto mb-12">
+            </h2>
+            <div className="space-y-4 text-muted-foreground leading-relaxed whitespace-pre-line text-left mb-12">
               {aboutPage?.bodyContent || (
                 <>
                   <p>
@@ -150,9 +146,9 @@ export default function About() {
                   </p>
                 </>
               )}
-            </motion.div>
+            </div>
 
-            <motion.div variants={fadeUp} className="grid grid-cols-3 gap-6 max-w-lg mx-auto mb-10">
+            <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto mb-10">
               {[
                 { icon: BookOpen, label: "2 Books", sub: "Published" },
                 { icon: Mic, label: "Weekly", sub: "Podcasts" },
@@ -164,15 +160,15 @@ export default function About() {
                   <p className="text-xs text-muted-foreground">{item.sub}</p>
                 </div>
               ))}
-            </motion.div>
+            </div>
 
-            <motion.div variants={fadeUp} className="flex justify-center">
+            <div className="flex justify-center">
               <Link href="/books">
                 <Button className="bg-[#c9a227] text-[#0f2337] hover:bg-[#b8911e] font-semibold">
                   Explore the Books <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-            </motion.div>
+            </div>
           </motion.div>
         </div>
       </section>
