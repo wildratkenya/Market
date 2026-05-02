@@ -1,6 +1,7 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useQuery } from "@tanstack/react-query";
 
 interface PageData {
+  id?: number;
   pageName: string;
   pageTitle: string;
   heroTitle: string | null;
@@ -15,34 +16,21 @@ interface PageData {
   email: string | null;
   address: string | null;
   socialLinks: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-const cache = new Map<string, PageData>();
-
 export function usePage(name: string) {
-  const [data, setData] = useState<PageData | null>(cache.get(name) || null);
-  const [loading, setLoading] = useState(!cache.has(name));
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery<PageData | null, Error>({
+    queryKey: ["/api/pages", name],
+    queryFn: async () => {
+      const res = await fetch(`/api/pages/${name}`);
+      if (!res.ok) throw new Error("Not found");
+      return res.json();
+    },
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
 
-  useEffect(() => {
-    if (cache.has(name)) return;
-    let cancelled = false;
-    setLoading(true);
-    fetch(`/api/pages/${name}`)
-      .then(r => { if (!r.ok) throw new Error("Not found"); return r.json(); })
-      .then(d => {
-        if (cancelled) return;
-        cache.set(name, d);
-        setData(d);
-        setLoading(false);
-      })
-      .catch(e => {
-        if (cancelled) return;
-        setError(e.message);
-        setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [name]);
-
-  return { data, loading, error };
+  return { data: data ?? null, loading: isLoading, error: error?.message ?? null };
 }
