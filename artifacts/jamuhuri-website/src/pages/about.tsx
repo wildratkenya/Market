@@ -132,6 +132,33 @@ export default function About() {
                   <p className="text-[#c9a227] text-sm">Financial Expert & Author</p>
                 </div>
               </div>
+
+              {(bioContent.vision || bioContent.mission) && (
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                  {bioContent.vision && (
+                    <div className="p-4 rounded-xl border border-border bg-card">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-[#c9a227]/15 flex items-center justify-center shrink-0">
+                          <Target className="h-4 w-4 text-[#c9a227]" />
+                        </div>
+                        <h3 className="text-sm font-bold text-foreground">Vision</h3>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{bioContent.vision}</p>
+                    </div>
+                  )}
+                  {bioContent.mission && (
+                    <div className="p-4 rounded-xl border border-border bg-card">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-[#c9a227]/15 flex items-center justify-center shrink-0">
+                          <Lightbulb className="h-4 w-4 text-[#c9a227]" />
+                        </div>
+                        <h3 className="text-sm font-bold text-foreground">Mission</h3>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{bioContent.mission}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
 
             <motion.div
@@ -167,33 +194,6 @@ export default function About() {
                   </>
                 )}
               </div>
-
-              {(bioContent.vision || bioContent.mission) && (
-                <div className="grid md:grid-cols-2 gap-6 mb-12">
-                  {bioContent.vision && (
-                    <div className="p-6 rounded-2xl border border-border bg-card">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-[#c9a227]/15 flex items-center justify-center">
-                          <Target className="h-5 w-5 text-[#c9a227]" />
-                        </div>
-                        <h3 className="text-lg font-bold text-foreground">Vision</h3>
-                      </div>
-                      <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{bioContent.vision}</p>
-                    </div>
-                  )}
-                  {bioContent.mission && (
-                    <div className="p-6 rounded-2xl border border-border bg-card">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-[#c9a227]/15 flex items-center justify-center">
-                          <Lightbulb className="h-5 w-5 text-[#c9a227]" />
-                        </div>
-                        <h3 className="text-lg font-bold text-foreground">Mission</h3>
-                      </div>
-                      <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{bioContent.mission}</p>
-                    </div>
-                  )}
-                </div>
-              )}
 
               <div className="grid grid-cols-3 gap-6 mb-10">
                 {[
