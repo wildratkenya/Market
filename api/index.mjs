@@ -404,9 +404,20 @@ export default async function handler(req, res) {
       const pageName = path.split('/api/pages/')[1];
       const body = await readBody(req);
       const updates = {};
-      if (body.content !== undefined) updates.content = body.content;
-      if (body.title !== undefined) updates.title = body.title;
+      if (body.content !== undefined) updates.body_content = body.content;
+      if (body.bodyContent !== undefined) updates.body_content = body.bodyContent;
+      if (body.title !== undefined) updates.page_title = body.title;
+      if (body.heroTitle !== undefined) updates.hero_title = body.heroTitle;
+      if (body.heroSubtitle !== undefined) updates.hero_subtitle = body.heroSubtitle;
+      if (body.heroDescription !== undefined) updates.hero_description = body.heroDescription;
       if (body.heroImage !== undefined) updates.hero_image = body.heroImage;
+      if (body.heroButton !== undefined) updates.hero_button = body.heroButton;
+      if (body.heroButtonText !== undefined) updates.hero_button_text = body.heroButtonText;
+      if (body.footerContent !== undefined) updates.footer_content = body.footerContent;
+      if (body.phone !== undefined) updates.phone = body.phone;
+      if (body.email !== undefined) updates.email = body.email;
+      if (body.address !== undefined) updates.address = body.address;
+      if (body.socialLinks !== undefined) updates.social_links = body.socialLinks;
       const data = await supabaseQuery('site_pages', 'page_name=eq.' + pageName);
       const page = Array.isArray(data) ? data[0] : data;
       if (!page) {

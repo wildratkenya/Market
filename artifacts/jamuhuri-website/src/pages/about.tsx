@@ -129,22 +129,26 @@ export default function About() {
               <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-6">
                 A Voice for Financial Literacy in Kenya
               </motion.h2>
-              <motion.div variants={fadeUp} className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  Jamuhuri Gachoroba is one of Kenya's foremost voices on financial market education.
-                  With years of experience studying and analyzing both global and local financial markets,
-                  he has dedicated his career to breaking down complex financial concepts for ordinary Kenyans.
-                </p>
-                <p>
-                  His work bridges the gap between sophisticated financial theory and everyday economic reality —
-                  helping readers and listeners understand how decisions made in Washington, London, and Beijing
-                  ripple through to prices in Nairobi's markets.
-                </p>
-                <p>
-                  Through his books and weekly podcast, Jamuhuri has built a growing community of financially
-                  conscious Kenyans who are equipped to make better decisions about savings, investments,
-                  and understanding the macroeconomic forces shaping their lives.
-                </p>
+              <motion.div variants={fadeUp} className="space-y-4 text-muted-foreground leading-relaxed whitespace-pre-line">
+                {aboutPage?.bodyContent || (
+                  <>
+                    <p>
+                      Jamuhuri Gachoroba is one of Kenya's foremost voices on financial market education.
+                      With years of experience studying and analyzing both global and local financial markets,
+                      he has dedicated his career to breaking down complex financial concepts for ordinary Kenyans.
+                    </p>
+                    <p>
+                      His work bridges the gap between sophisticated financial theory and everyday economic reality —
+                      helping readers and listeners understand how decisions made in Washington, London, and Beijing
+                      ripple through to prices in Nairobi's markets.
+                    </p>
+                    <p>
+                      Through his books and weekly podcast, Jamuhuri has built a growing community of financially
+                      conscious Kenyans who are equipped to make better decisions about savings, investments,
+                      and understanding the macroeconomic forces shaping their lives.
+                    </p>
+                  </>
+                )}
               </motion.div>
 
               <motion.div variants={fadeUp} className="mt-8 grid grid-cols-3 gap-6">
