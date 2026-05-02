@@ -1,4 +1,4 @@
-import { db } from "@workspace/db";
+﻿import { db } from "@workspace/db";
 import { booksTable, adminUsersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { hashPassword } from "./token";
@@ -9,12 +9,12 @@ const DEFAULT_BOOKS = [
     title: "Introduction to Money Markets",
     subtitle: "Understanding Short-Term Financial Instruments",
     description:
-      "A comprehensive guide to money markets, covering Treasury Bills, commercial paper, certificates of deposit, and repurchase agreements. This book explains how money markets function in Kenya and globally, their role in monetary policy, and how individual and institutional investors can participate effectively. Written for both beginners and finance professionals seeking to deepen their understanding of short-term financial instruments.",
+      "Purpose: Promote financial literacy. Help you better understand how the financial markets operate.\n\nTarget Audience: Retail investors, University students, Financial institutions & employees.\n\nContent: Part 1: Basic concepts and fundamental principles (interest rates & inflation). Part 2: The major financial markets (forex, stocks & bonds). Part 3: Financial market stories - so that you learn from the past & avoid repeating the same mistakes.",
     author: "Jamuhuri Gachoroba",
     coverImage: null,
     type: "both" as const,
-    hardcopyPrice: "1500.00",
-    ebookPrice: "800.00",
+    hardcopyPrice: "3000.00",
+    ebookPrice: "2000.00",
     currency: "KES",
     isLatest: true,
     publishedYear: 2024,
@@ -148,4 +148,6 @@ export async function seedDatabase({ info }: { info: (msg: string) => void }) {
     }
   }
 }
+
+
 

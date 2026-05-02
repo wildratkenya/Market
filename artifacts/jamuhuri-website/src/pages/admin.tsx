@@ -259,29 +259,24 @@ function BookFormDialog({
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
-                          
                           const formData = new FormData();
                           formData.append("image", file);
-                          
                           try {
-                            const { token } = JSON.parse(localStorage.getItem("adminToken") || '{}');
+                            const token = localStorage.getItem("adminToken") || "";
                             const res = await fetch("/api/upload", {
                               method: "POST",
-                              headers: {
-                                "Authorization": `Bearer ${token || localStorage.getItem("adminToken")}`
-                              },
-                              body: formData
+                              headers: { "Authorization": `Bearer ${token}` },
+                              body: formData,
                             });
-                            
                             if (!res.ok) throw new Error("Upload failed");
                             const data = await res.json();
                             setForm(f => ({ ...f, coverImage: data.url }));
-                          } catch (err) {
+                          } catch {
                             toast({ variant: "destructive", title: "Upload failed", description: "Could not upload the image." });
                           }
                         }}
                       />
-                      <Button 
+                      <Button
                         type="button" 
                         variant="secondary" 
                         size="sm" 
@@ -333,10 +328,7 @@ function BooksTab() {
 
   const handleDelete = (book: Book) => {
     setDeletingId(book.id);
-    fetch(`/api/books/${book.id}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-    })
+    fetch(`/api/books/${book.id}`, { method: "DELETE", headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("adminToken")}` } })
       .then(async (r) => {
         if (r.status === 409) {
           const data = await r.json();
@@ -348,10 +340,7 @@ function BooksTab() {
             setDeletingId(null);
             return;
           }
-          return fetch(`/api/books/${book.id}?cascade=true`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-          });
+          return fetch(`/api/books/${book.id}?cascade=true`, { method: "DELETE", headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("adminToken")}` } });
         }
         return r;
       })
@@ -635,11 +624,11 @@ export default function Admin() {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAdminAuth();
   const [, setLocation] = useLocation();
 
-  const { data: stats } = useGetStatsSummary({ query: { queryKey: getGetStatsSummaryQueryKey() } });
-  const { data: orders } = useListOrders({ query: { queryKey: getListOrdersQueryKey() } });
-  const { data: subscribers, isLoading: subsLoading } = useListSubscribers({ query: { queryKey: getListSubscribersQueryKey() } });
-  const { data: messages, isLoading: msgsLoading } = useListMessages({ query: { queryKey: getListMessagesQueryKey() } });
-  const { data: books } = useListBooks({ query: { queryKey: getListBooksQueryKey() } });
+  const { data: stats } = useGetStatsSummary({ query: { queryKey: getGetStatsSummaryQueryKey(), enabled: isAuthenticated } });
+  const { data: orders } = useListOrders({ query: { queryKey: getListOrdersQueryKey(), enabled: isAuthenticated } });
+  const { data: subscribers, isLoading: subsLoading } = useListSubscribers({ query: { queryKey: getListSubscribersQueryKey(), enabled: isAuthenticated } });
+  const { data: messages, isLoading: msgsLoading } = useListMessages({ query: { queryKey: getListMessagesQueryKey(), enabled: isAuthenticated } });
+  const { data: books } = useListBooks({ query: { queryKey: getListBooksQueryKey(), enabled: isAuthenticated } });
 
   const pendingOrders = orders?.filter((o) => o.status === "pending").length ?? 0;
 
@@ -803,7 +792,7 @@ export default function Admin() {
                                         fetch(`/api/subscribers/${sub.id}/whatsapp`, {
                                           method: 'PATCH',
                                           headers: { 
-                                            'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+                                            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
                                             'Content-Type': 'application/json'
                                           },
                                           body: JSON.stringify({ approved: false })
@@ -821,7 +810,7 @@ export default function Admin() {
                                         fetch(`/api/subscribers/${sub.id}/whatsapp`, {
                                           method: 'PATCH',
                                           headers: { 
-                                            'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+                                            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
                                             'Content-Type': 'application/json'
                                           },
                                           body: JSON.stringify({ approved: true })
@@ -861,7 +850,7 @@ export default function Admin() {
                       onMarkRead={() => {
                         fetch(`/api/messages/${msg.id}/read`, { 
                           method: 'PATCH', 
-                          headers: { 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` } 
+                          headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` } 
                         }).then(() => qc.invalidateQueries({ queryKey: getListMessagesQueryKey() }));
                       }} 
                     />
@@ -888,6 +877,12 @@ export default function Admin() {
     </div>
   );
 }
+
+
+
+
+
+
 
 
 

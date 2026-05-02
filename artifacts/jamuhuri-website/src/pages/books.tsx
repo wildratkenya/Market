@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, BookOpen, Filter, Search, Package, Monitor, Minus, Plus } from "lucide-react";
 import bookCoverImg from "@assets/An_Introduction_to_Financial_Markets_1775134561365.png";
@@ -39,6 +39,8 @@ export default function Books() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [previewBook, setPreviewBook] = useState<Book | null>(null);
+  const [showFullDesc, setShowFullDesc] = useState<Record<number, boolean>>({});
   const createOrder = useCreateOrder();
   const { toast } = useToast();
 
@@ -207,9 +209,27 @@ export default function Books() {
                     </div>
                     <h3 className="font-serif text-2xl font-bold mb-3">{book.title}</h3>
                     {book.subtitle && <h4 className="text-muted-foreground font-medium mb-3 italic">{book.subtitle}</h4>}
-                    <p className="text-muted-foreground text-sm flex-1 mb-6 leading-relaxed">
-                      {book.description}
+                    <p className="text-muted-foreground text-sm flex-1 mb-4 leading-relaxed">
+                      {book.description && book.description.length > 180
+                        ? (showFullDesc[book.id] ? book.description : book.description.slice(0, 180) + '...')
+                        : book.description}
                     </p>
+                    {book.description && book.description.length > 180 && !showFullDesc[book.id] && (
+                      <button
+                        onClick={() => setPreviewBook(book)}
+                        className="text-xs text-primary font-semibold mb-6 hover:underline"
+                      >
+                        More Details
+                      </button>
+                    )}
+                    {book.description && book.description.length > 180 && showFullDesc[book.id] && (
+                      <button
+                        onClick={() => setShowFullDesc(prev => ({ ...prev, [book.id]: false }))}
+                        className="text-xs text-primary font-semibold mb-6 hover:underline"
+                      >
+                        Show Less
+                      </button>
+                    )}
                     
                     <div className="border-t border-border/50 pt-6 mt-auto">
                       <div className="flex flex-col gap-3">
@@ -219,23 +239,13 @@ export default function Books() {
                             {book.hardcopyPrice ? `${book.currency} ${book.hardcopyPrice.toLocaleString()}` : 'Varies'}
                           </span>
                         </div>
-                        {(book.type === 'hardcopy' || book.type === 'both') && (
-                          <Button
-                            onClick={() => handleOrderClick(book, "hardcopy")}
-                            className="w-full text-sm py-5 bg-[#0f2337] hover:bg-[#0f2337]/90 text-white font-semibold gap-2"
-                          >
-                            <Package className="h-4 w-4" /> Order Hard Copy
-                          </Button>
-                        )}
-                        {(book.type === 'ebook' || book.type === 'both') && (
-                          <Button
-                            onClick={() => handleOrderClick(book, "ebook")}
-                            variant="outline"
-                            className="w-full text-sm py-5 border-blue-300 text-blue-700 hover:bg-blue-50 font-semibold gap-2"
-                          >
-                            <Monitor className="h-4 w-4" /> Order Digital Copy
-                          </Button>
-                        )}
+                        <Button
+                          onClick={() => setPreviewBook(book)}
+                          variant="outline"
+                          className="w-full text-sm py-5 border-primary/30 text-primary hover:bg-primary/5 font-semibold gap-2"
+                        >
+                          <BookOpen className="h-4 w-4" /> More Details & Order
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -245,6 +255,79 @@ export default function Books() {
           </div>
         )}
       </section>
+
+      {/* Book Preview Dialog */}
+      <Dialog open={!!previewBook} onOpenChange={(open) => !open && setPreviewBook(null)}>
+        <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
+          {previewBook && (
+            <>
+              <div className="bg-secondary p-6 text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-serif">{previewBook.title}</DialogTitle>
+                  <DialogDescription className="text-white/70">
+                    {previewBook.subtitle}
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+              <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline">{previewBook.category || 'Finance'}</Badge>
+                  {previewBook.type === 'hardcopy' && <Badge className="bg-orange-100 text-orange-800 border-none">Hard Copy</Badge>}
+                  {previewBook.type === 'ebook' && <Badge className="bg-blue-100 text-blue-800 border-none">Digital</Badge>}
+                  {previewBook.type === 'both' && (<>
+                    <Badge className="bg-orange-100 text-orange-800 border-none">Hard Copy</Badge>
+                    <Badge className="bg-blue-100 text-blue-800 border-none">Digital</Badge>
+                  </>)}
+                </div>
+                <div>
+                  <h4 className="font-bold text-foreground mb-2">About this Book</h4>
+                  <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">{previewBook.description}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                  {previewBook.hardcopyPrice && (
+                    <div className="text-center p-4 bg-background rounded-lg border">
+                      <Package className="h-6 w-6 mx-auto mb-2 text-primary" />
+                      <p className="text-xs text-muted-foreground mb-1">Hard Copy</p>
+                      <p className="font-mono text-lg font-bold">{previewBook.currency} {previewBook.hardcopyPrice.toLocaleString()}</p>
+                    </div>
+                  )}
+                  {previewBook.ebookPrice && (
+                    <div className="text-center p-4 bg-background rounded-lg border">
+                      <Monitor className="h-6 w-6 mx-auto mb-2 text-blue-600" />
+                      <p className="text-xs text-muted-foreground mb-1">Digital Copy</p>
+                      <p className="font-mono text-lg font-bold">{previewBook.currency} {previewBook.ebookPrice.toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
+                  <p className="text-sm font-medium">
+                    <strong className="text-primary">Payment:</strong> Till No: <strong>3016590</strong>. For all communication email: intro2fin.markets@gmail.com
+                  </p>
+                </div>
+              </div>
+              <div className="p-6 border-t space-y-3 bg-background">
+                {(previewBook.type === 'hardcopy' || previewBook.type === 'both') && (
+                  <Button
+                    onClick={() => { handleOrderClick(previewBook, "hardcopy"); setPreviewBook(null); }}
+                    className="w-full py-6 bg-[#0f2337] hover:bg-[#0f2337]/90 text-white font-semibold gap-2"
+                  >
+                    <Package className="h-5 w-5" /> Order Hard Copy
+                  </Button>
+                )}
+                {(previewBook.type === 'ebook' || previewBook.type === 'both') && (
+                  <Button
+                    onClick={() => { handleOrderClick(previewBook, "ebook"); setPreviewBook(null); }}
+                    variant="outline"
+                    className="w-full py-6 border-blue-300 text-blue-700 hover:bg-blue-50 font-semibold gap-2"
+                  >
+                    <Monitor className="h-5 w-5" /> Order Digital Copy
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Order Modal */}
       <Dialog open={isOrderModalOpen} onOpenChange={setIsOrderModalOpen}>
@@ -364,7 +447,7 @@ export default function Books() {
                   >
                     <div className="bg-primary/10 p-4 rounded-lg border border-primary/20 mb-4">
                       <p className="text-sm font-medium text-foreground">
-                        <strong className="text-primary">Note:</strong> Payment is collected on delivery via M-PESA. Shipping charges apply based on your location and courier rates.
+                        <strong className="text-primary">Payment:</strong> Till No: <strong>3016590</strong>. Amount: KES 3,000 (Hardcopy). Shipping charges apply based on your location and courier rates.
                       </p>
                     </div>
 
@@ -413,7 +496,7 @@ export default function Books() {
                     className="bg-primary/10 p-4 rounded-lg border border-primary/20 mt-4"
                   >
                     <p className="text-sm font-medium text-foreground">
-                      <strong className="text-primary">E-Book Delivery:</strong> Payment instructions will be sent to your email. Upon payment confirmation, the digital copy will be delivered instantly to your inbox.
+                      <strong className="text-primary">E-Book Payment:</strong> Till No: <strong>3016590</strong>. Amount: KES 2,000 (Softcopy). Payment confirmation and your email address required for instant delivery.
                     </p>
                   </motion.div>
                 )}
@@ -434,3 +517,5 @@ export default function Books() {
     </div>
   );
 }
+
+

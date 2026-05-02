@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { adminUsersTable } from "@workspace/db/schema";
 import { eq, or } from "drizzle-orm";
@@ -61,13 +61,19 @@ router.post("/admin/login", async (req, res) => {
 
 router.get("/admin/me", requireAuth, async (req, res) => {
   try {
-    const { getAdminById } = await import("../lib/data");
-    const user = await getAdminById(req.adminUser!.uid);
-    if (!user) {
+    const { supabase } = await import("../lib/supabase");
+    const { data, error } = await supabase
+      .from("admin_users")
+      .select("id, username, email, role")
+      .eq("username", req.adminUser!.username)
+      .limit(1)
+      .single();
+    if (error) throw error;
+    if (!data) {
       res.status(404).json({ error: "User not found" });
       return;
     }
-    res.json(user);
+    res.json(data);
   } catch (err) {
     logger.error({ err }, "Error in /admin/me");
     res.status(500).json({ error: "Internal server error" });
@@ -128,8 +134,10 @@ router.get("/force-admin-sync", async (req, res) => {
     await forceResetAdmin();
     res.send("Admin credentials synced successfully for user: admin / Jamuhuri. Please try logging in again.");
   } catch (err) {
-    res.status(500).send(`Sync failed: ${err.message}`);
+    res.status(500).send('Sync failed: ' + err.message);
   }
 });
 
 export default router;
+
+

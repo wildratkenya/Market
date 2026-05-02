@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+﻿import { Link } from "wouter";
 import { Mail, Mic, BookOpen, TrendingUp, User } from "lucide-react";
 
 export function Footer() {
@@ -12,9 +12,9 @@ export function Footer() {
               Kenyan financial expert, author, and host of The Market Colour Podcast. 
               Dedicated to demystifying global money markets and their impact on the Kenyan economy.
             </p>
-            <a href="mailto:contact@jamuhuri.com" className="inline-flex items-center gap-2 text-primary hover:text-white transition-colors">
+            <a href="mailto:intro2fin.markets@gmail.com" className="inline-flex items-center gap-2 text-primary hover:text-white transition-colors">
               <Mail className="h-4 w-4" />
-              contact@jamuhuri.com
+              intro2fin.markets@gmail.com
             </a>
           </div>
 
@@ -52,3 +52,4 @@ export function Footer() {
     </footer>
   );
 }
+

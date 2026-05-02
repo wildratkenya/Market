@@ -82,8 +82,8 @@ export default function Contact() {
                     </div>
                     <div>
                       <p className="font-bold text-foreground">Email</p>
-                      <a href="mailto:itukarua2020@gmail.com" className="text-muted-foreground hover:text-[#c9a227] transition-colors text-sm">
-                        itukarua2020@gmail.com
+                      <a href="mailto:intro2fin.markets@gmail.com" className="text-muted-foreground hover:text-[#c9a227] transition-colors text-sm">
+                        intro2fin.markets@gmail.com
                       </a>
                     </div>
                   </div>
@@ -180,4 +180,5 @@ export default function Contact() {
     </div>
   );
 }
+
 
