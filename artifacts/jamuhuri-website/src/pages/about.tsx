@@ -98,82 +98,82 @@ export default function About() {
 
       {/* Bio Section */}
       <section className="py-24 bg-background">
-        <div className="container mx-auto px-6 max-w-6xl">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7 }}
-            >
-              <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-[#0f2337] flex items-center justify-center relative">
-                <img
-                  src={authorPhoto}
-                  alt="Jamuhuri Gachoroba"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f2337]/60 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6">
-                  <p className="text-white font-serif text-xl font-bold">Jamuhuri Gachoroba</p>
-                  <p className="text-[#c9a227] text-sm">Financial Expert & Author</p>
-                </div>
+        <div className="container mx-auto px-6 max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="text-center mb-12"
+          >
+            <div className="w-64 h-64 mx-auto rounded-2xl overflow-hidden bg-[#0f2337] relative shadow-lg">
+              <img
+                src={authorPhoto}
+                alt="Jamuhuri Gachoroba"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f2337]/70 to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4">
+                <p className="text-white font-serif text-lg font-bold">Jamuhuri Gachoroba</p>
+                <p className="text-[#c9a227] text-xs">Financial Expert & Author</p>
               </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+            className="text-center"
+          >
+            <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-8">
+              A Voice for Financial Literacy in Kenya
+            </motion.h2>
+            <motion.div variants={fadeUp} className="space-y-4 text-muted-foreground leading-relaxed whitespace-pre-line text-left max-w-3xl mx-auto mb-12">
+              {aboutPage?.bodyContent || (
+                <>
+                  <p>
+                    Jamuhuri Gachoroba is one of Kenya's foremost voices on financial market education.
+                    With years of experience studying and analyzing both global and local financial markets,
+                    he has dedicated his career to breaking down complex financial concepts for ordinary Kenyans.
+                  </p>
+                  <p>
+                    His work bridges the gap between sophisticated financial theory and everyday economic reality —
+                    helping readers and listeners understand how decisions made in Washington, London, and Beijing
+                    ripple through to prices in Nairobi's markets.
+                  </p>
+                  <p>
+                    Through his books and weekly podcast, Jamuhuri has built a growing community of financially
+                    conscious Kenyans who are equipped to make better decisions about savings, investments,
+                    and understanding the macroeconomic forces shaping their lives.
+                  </p>
+                </>
+              )}
             </motion.div>
 
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={stagger}
-            >
-              <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-6">
-                A Voice for Financial Literacy in Kenya
-              </motion.h2>
-              <motion.div variants={fadeUp} className="space-y-4 text-muted-foreground leading-relaxed whitespace-pre-line">
-                {aboutPage?.bodyContent || (
-                  <>
-                    <p>
-                      Jamuhuri Gachoroba is one of Kenya's foremost voices on financial market education.
-                      With years of experience studying and analyzing both global and local financial markets,
-                      he has dedicated his career to breaking down complex financial concepts for ordinary Kenyans.
-                    </p>
-                    <p>
-                      His work bridges the gap between sophisticated financial theory and everyday economic reality —
-                      helping readers and listeners understand how decisions made in Washington, London, and Beijing
-                      ripple through to prices in Nairobi's markets.
-                    </p>
-                    <p>
-                      Through his books and weekly podcast, Jamuhuri has built a growing community of financially
-                      conscious Kenyans who are equipped to make better decisions about savings, investments,
-                      and understanding the macroeconomic forces shaping their lives.
-                    </p>
-                  </>
-                )}
-              </motion.div>
-
-              <motion.div variants={fadeUp} className="mt-8 grid grid-cols-3 gap-6">
-                {[
-                  { icon: BookOpen, label: "2 Books", sub: "Published" },
-                  { icon: Mic, label: "Weekly", sub: "Podcasts" },
-                  { icon: Users, label: "Growing", sub: "Community" },
-                ].map((item) => (
-                  <div key={item.label} className="text-center p-4 rounded-xl border border-border bg-card">
-                    <item.icon className="h-6 w-6 text-[#c9a227] mx-auto mb-2" />
-                    <p className="font-bold text-foreground">{item.label}</p>
-                    <p className="text-xs text-muted-foreground">{item.sub}</p>
-                  </div>
-                ))}
-              </motion.div>
-
-              <motion.div variants={fadeUp} className="mt-8">
-                <Link href="/books">
-                  <Button className="bg-[#c9a227] text-[#0f2337] hover:bg-[#b8911e] font-semibold">
-                    Explore the Books <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </motion.div>
+            <motion.div variants={fadeUp} className="grid grid-cols-3 gap-6 max-w-lg mx-auto mb-10">
+              {[
+                { icon: BookOpen, label: "2 Books", sub: "Published" },
+                { icon: Mic, label: "Weekly", sub: "Podcasts" },
+                { icon: Users, label: "Growing", sub: "Community" },
+              ].map((item) => (
+                <div key={item.label} className="text-center p-4 rounded-xl border border-border bg-card">
+                  <item.icon className="h-6 w-6 text-[#c9a227] mx-auto mb-2" />
+                  <p className="font-bold text-foreground">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">{item.sub}</p>
+                </div>
+              ))}
             </motion.div>
-          </div>
+
+            <motion.div variants={fadeUp} className="flex justify-center">
+              <Link href="/books">
+                <Button className="bg-[#c9a227] text-[#0f2337] hover:bg-[#b8911e] font-semibold">
+                  Explore the Books <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
