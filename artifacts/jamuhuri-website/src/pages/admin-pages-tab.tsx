@@ -1,0 +1,146 @@
+﻿import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+
+function PagesTab() {
+  const [selectedPage, setSelectedPage] = useState<string | null>(null);
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+  const qc = useQueryClient();
+
+  const pages = [
+    { id: "home", label: "Home Page" },
+    { id: "about", label: "About Page" },
+    { id: "contact", label: "Contact Page" },
+    { id: "markets", label: "Markets Page" },
+    { id: "footer", label: "Footer" },
+  ];
+
+  const loadPage = async (pageId: string) => {
+    setSelectedPage(pageId);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/pages/${pageId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFormData(data);
+      } else {
+        setFormData({ pageName: pageId, pageTitle: pageId.charAt(0).toUpperCase() + pageId.slice(1) });
+      }
+    } catch {
+      setFormData({ pageName: pageId, pageTitle: pageId.charAt(0).toUpperCase() + pageId.slice(1) });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selectedPage) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/pages/${selectedPage}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}`
+        },
+        body: JSON.stringify(formData)
+      });
+      if (res.ok) {
+        toast({ title: "Page saved", description: "Content updated successfully." });
+        qc.invalidateQueries({ queryKey: ["/api/pages"] });
+      } else {
+        const err = await res.json();
+        toast({ variant: "destructive", title: "Save failed", description: err.error || "Unknown error" });
+      }
+    } catch {
+      toast({ variant: "destructive", title: "Save failed", description: "Network error" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const fields: { key: string; label: string; type?: string }[] = [
+    { key: "pageTitle", label: "Page Title" },
+    { key: "heroTitle", label: "Hero Title" },
+    { key: "heroSubtitle", label: "Hero Subtitle" },
+    { key: "heroDescription", label: "Hero Description", type: "textarea" },
+    { key: "heroImage", label: "Hero Image URL" },
+    { key: "heroButtonText", label: "Hero Button Text" },
+    { key: "bodyContent", label: "Body Content", type: "textarea" },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-1">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Pages</h3>
+          <div className="space-y-1">
+            {pages.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => loadPage(p.id)}
+                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  selectedPage === p.id
+                    ? "bg-[#c9a227]/20 text-[#c9a227]"
+                    : "hover:bg-muted"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="lg:col-span-2">
+        {loading ? (
+          <div className="bg-card border border-border rounded-xl p-8 text-center">
+            <div className="w-8 h-8 rounded-full border-4 border-[#c9a227] border-t-transparent animate-spin mx-auto" />
+          </div>
+        ) : selectedPage ? (
+          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+            <h3 className="text-lg font-bold capitalize">{formData.pageTitle || selectedPage}</h3>
+            {fields.map((f) => (
+              <div key={f.key} className="space-y-1">
+                <Label className="text-sm font-medium">{f.label}</Label>
+                {f.type === "textarea" ? (
+                  <Textarea
+                    value={formData[f.key] || ""}
+                    onChange={(e) => setFormData(d => ({ ...d, [f.key]: e.target.value }))}
+                    rows={4}
+                    placeholder={`Enter ${f.label.toLowerCase()}...`}
+                  />
+                ) : (
+                  <Input
+                    value={formData[f.key] || ""}
+                    onChange={(e) => setFormData(d => ({ ...d, [f.key]: e.target.value }))}
+                    placeholder={`Enter ${f.label.toLowerCase()}...`}
+                  />
+                )}
+              </div>
+            ))}
+            <div className="flex gap-3 pt-2">
+              <Button onClick={handleSave} disabled={saving} className="bg-[#c9a227] text-[#0f2337] hover:bg-[#b8911e]">
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
+            <p>Select a page from the left to edit its content.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default PagesTab;

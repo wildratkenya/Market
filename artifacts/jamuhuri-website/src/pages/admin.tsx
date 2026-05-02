@@ -1,10 +1,10 @@
-import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Users, MessageSquare, RefreshCw, ChevronDown, ChevronUp,
   Package, Monitor, Check, Clock, BookOpen, Plus, Pencil, Trash2,
-  AlertCircle, Truck, CheckCircle2, XCircle, X, LogOut, ShieldCheck
+  AlertCircle, Truck, CheckCircle2, XCircle, X, LogOut, ShieldCheck, Layout
 } from "lucide-react";
 import { useAdminAuth } from "@/contexts/admin-auth-context";
 import {
@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
+import PagesTab from "./admin-pages-tab";
 import { useToast } from "@/hooks/use-toast";
 
 const ORDER_STATUSES = ["pending", "confirmed", "shipped", "delivered", "cancelled"] as const;
@@ -46,7 +47,7 @@ function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType
       </div>
       <div>
         <p className="text-muted-foreground text-sm">{label}</p>
-        <p className="text-3xl font-bold text-foreground">{value ?? "—"}</p>
+        <p className="text-3xl font-bold text-foreground">{value ?? "â€”"}</p>
       </div>
     </div>
   );
@@ -309,7 +310,7 @@ function BookFormDialog({
           <div className="p-6 border-t border-border flex justify-end gap-3 shrink-0">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" disabled={isPending} className="bg-[#0f2337] hover:bg-[#0f2337]/90 text-white px-6">
-              {isPending ? "Saving…" : isEdit ? "Save Changes" : "Add Book"}
+              {isPending ? "Savingâ€¦" : isEdit ? "Save Changes" : "Add Book"}
             </Button>
           </div>
         </form>
@@ -331,25 +332,46 @@ function BooksTab() {
   const canDelete = user?.role === "super_admin";
 
   const handleDelete = (book: Book) => {
-    if (!window.confirm(`Delete "${book.title}"? This cannot be undone.`)) return;
-    window.alert("Deleting book: " + book.id);
     setDeletingId(book.id);
-    deleteBook.mutate(
-      { id: book.id },
-      {
-        onSuccess: () => {
-          window.alert("Delete success!");
+    fetch(`/api/books/${book.id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then(async (r) => {
+        if (r.status === 409) {
+          const data = await r.json();
+          const orderList = (data.orders || []).map((o: any) => `#${o.id} - ${o.customer_name} (${o.status})`).join("\n");
+          const confirmed = window.confirm(
+            `Cannot delete "${book.title}".\n\nIt has ${data.orderCount} associated order(s):\n${orderList}\n\nDo you want to delete this book AND cancel/remove all its orders? This cannot be undone.`
+          );
+          if (!confirmed) {
+            setDeletingId(null);
+            return;
+          }
+          return fetch(`/api/books/${book.id}?cascade=true`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+        return r;
+      })
+      .then(async (r) => {
+        if (!r) return;
+        if (r.ok) {
           qc.invalidateQueries({ queryKey: getGetStatsSummaryQueryKey() });
+          qc.invalidateQueries({ queryKey: getListOrdersQueryKey() });
+          qc.invalidateQueries({ queryKey: getListBooksQueryKey() });
           toast({ title: "Book deleted", description: `"${book.title}" has been removed.` });
           setTimeout(() => window.location.reload(), 500);
-        },
-        onError: (err) => {
-          window.alert("Delete error: " + JSON.stringify(err));
-          toast({ variant: "destructive", title: "Delete failed", description: "Could not delete the book." });
-        },
-        onSettled: () => setDeletingId(null),
-      }
-    );
+        } else {
+          const data = await r.json().catch(() => ({}));
+          toast({ variant: "destructive", title: "Delete failed", description: data.error || "Could not delete the book." });
+        }
+      })
+      .catch(() => {
+        toast({ variant: "destructive", title: "Delete failed", description: "Network error." });
+      })
+      .finally(() => setDeletingId(null));
   };
 
   const toFormData = (book: Book): typeof EMPTY_BOOK_FORM => ({
@@ -407,8 +429,8 @@ function BooksTab() {
                 {book.subtitle && <p className="text-sm text-muted-foreground italic">{book.subtitle}</p>}
                 <div className="flex items-center gap-3 mt-1 flex-wrap">
                   <span className="text-xs text-muted-foreground">{book.author}</span>
-                  {book.publishedYear && <span className="text-xs text-muted-foreground">• {book.publishedYear}</span>}
-                  {book.category && <span className="text-xs text-muted-foreground">• {book.category}</span>}
+                  {book.publishedYear && <span className="text-xs text-muted-foreground">â€¢ {book.publishedYear}</span>}
+                  {book.category && <span className="text-xs text-muted-foreground">â€¢ {book.category}</span>}
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                     book.type === "hardcopy" ? "bg-orange-100 text-orange-700" :
                     book.type === "ebook" ? "bg-blue-100 text-blue-700" :
@@ -444,7 +466,7 @@ function BooksTab() {
                       disabled={deletingId === book.id}
                       className="h-8 px-3 gap-1.5 text-xs border-red-200 text-red-600 hover:bg-red-50"
                     >
-                      <Trash2 className="h-3 w-3" /> {deletingId === book.id ? "…" : "Delete"}
+                      <Trash2 className="h-3 w-3" /> {deletingId === book.id ? "â€¦" : "Delete"}
                     </Button>
                   )}
                 </div>
@@ -526,11 +548,11 @@ function OrdersTab() {
                   </div>
                   <div>
                     <p className="font-bold text-foreground">{order.bookTitle}</p>
-                    <p className="text-sm text-muted-foreground">{order.customerName} · {order.customerEmail}</p>
+                    <p className="text-sm text-muted-foreground">{order.customerName} Â· {order.customerEmail}</p>
                     {order.customerPhone && <p className="text-xs text-muted-foreground">{order.customerPhone}</p>}
                     {order.orderType === "hardcopy" && (order.deliveryAddress || order.deliveryCity) && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        📍 {[order.deliveryAddress, order.deliveryCity].filter(Boolean).join(", ")}
+                        ðŸ“ {[order.deliveryAddress, order.deliveryCity].filter(Boolean).join(", ")}
                       </p>
                     )}
                   </div>
@@ -608,7 +630,7 @@ function MessageRow({ msg }: { msg: { id: number; type: string; subject: string;
 }
 
 export default function Admin() {
-  const [tab, setTab] = useState<"books" | "orders" | "subscribers" | "messages" | "admins">("orders");
+  const [tab, setTab] = useState<"books" | "orders" | "subscribers" | "messages" | "admins" | "pages">("orders");
   const qc = useQueryClient();
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAdminAuth();
   const [, setLocation] = useLocation();
@@ -629,8 +651,15 @@ export default function Admin() {
     { id: "subscribers" as const, label: "Subscribers", icon: Users,       count: subscribers?.length },
     { id: "messages" as const,    label: "Messages",    icon: MessageSquare, count: messages?.length },
     { id: "admins" as const,      label: "Manage Admins", icon: ShieldCheck,   count: undefined },
+    { id: "pages" as const,       label: "Site Pages",    icon: Layout,            count: undefined },
   ];
   const tabs = isReadonly ? allTabs.filter((t) => t.id === "orders") : (user?.role === 'super_admin' ? allTabs : allTabs.filter(t => t.id !== 'admins'));
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      setLocation("/admin/login");
+    }
+  }, [authLoading, isAuthenticated, setLocation]);
 
   if (authLoading) {
     return (
@@ -640,10 +669,6 @@ export default function Admin() {
     );
   }
 
-  if (!isAuthenticated) {
-    setLocation("/admin/login");
-    return null;
-  }
 
   const handleLogout = () => {
     logout();
@@ -759,7 +784,7 @@ export default function Admin() {
                           <td className="p-4 text-muted-foreground">{i + 1}</td>
                           <td className="p-4 font-medium text-foreground">{sub.name}</td>
                           <td className="p-4 text-muted-foreground">{sub.email}</td>
-                          <td className="p-4 text-muted-foreground">{sub.phone || "—"}</td>
+                          <td className="p-4 text-muted-foreground">{sub.phone || "â€”"}</td>
                           <td className="p-4">
                             {sub.wantsWhatsapp
                               ? <span className="text-xs font-semibold text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full">Requested</span>
@@ -804,7 +829,7 @@ export default function Admin() {
                                       }}
                                     >Approve</Button>
                                   </div>
-                              : <span className="text-muted-foreground">—</span>}
+                              : <span className="text-muted-foreground">â€”</span>}
                           </td>
                           <td className="p-4 text-muted-foreground text-xs whitespace-nowrap">
                             {new Date(sub.subscribedAt).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}
@@ -845,6 +870,7 @@ export default function Admin() {
               )}
             </motion.div>
           )}
+          {tab === "pages" && <PagesTab />}
           {tab === "admins" && (
             <motion.div key="admins" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <div className="bg-card border border-border rounded-xl overflow-hidden p-8 text-center">
@@ -862,3 +888,8 @@ export default function Admin() {
     </div>
   );
 }
+
+
+
+
+

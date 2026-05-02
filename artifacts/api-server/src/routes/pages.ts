@@ -44,22 +44,27 @@ function serializePage(p: any) {
 
 router.get("/pages", requireAuth, async (_req, res) => {
   try {
-    const pages = await db.select().from(sitePagesTable).orderBy(sitePagesTable.pageName);
-    res.json(pages.map(serializePage));
-  } catch {
+    const { supabase } = await import("../lib/supabase");
+    const { data, error } = await supabase.from("site_pages").select("*").order("page_name");
+    if (error) throw error;
+    res.json((data || []).map(serializePage));
+  } catch (err) {
+    console.error("Pages fetch error:", err);
     res.status(500).json({ error: "Failed to fetch pages" });
   }
 });
 
 router.get("/pages/:name", async (req, res) => {
   try {
-    const [page] = await db.select().from(sitePagesTable).where(eq(sitePagesTable.pageName, req.params.name));
-    if (!page) {
+    const { supabase } = await import("../lib/supabase");
+    const { data, error } = await supabase.from("site_pages").select("*").eq("page_name", req.params.name).single();
+    if (error) {
       res.status(404).json({ error: "Page not found" });
       return;
     }
-    res.json(serializePage(page));
-  } catch {
+    res.json(serializePage(data));
+  } catch (err) {
+    console.error("Page fetch error:", err);
     res.status(500).json({ error: "Failed to fetch page" });
   }
 });
@@ -71,12 +76,16 @@ router.put("/pages/:name", requireEditor, async (req, res) => {
       res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
       return;
     }
-    const { upsertPage } = await import("../lib/data");
-    const page = await upsertPage(req.params.name, parsed.data);
-    res.json(serializePage(page));
+    const { supabase } = await import("../lib/supabase");
+    const { data, error } = await supabase.from("site_pages").update(parsed.data).eq("page_name", req.params.name).select().single();
+    if (error) throw error;
+    res.json(serializePage(data));
   } catch (err) {
+    console.error("Page update error:", err);
     res.status(500).json({ error: "Failed to update page" });
   }
 });
 
 export default router;
+
+

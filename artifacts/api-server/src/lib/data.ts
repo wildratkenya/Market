@@ -1,4 +1,4 @@
-import { db } from "@workspace/db";
+﻿import { db } from "@workspace/db";
 import { booksTable, podcastsTable } from "@workspace/db/schema";
 import { supabase } from "./supabase";
 import { desc } from "drizzle-orm";
@@ -223,37 +223,31 @@ export async function getOrders() {
 }
 
 export async function getStats() {
+  const { count: orders } = await supabase.from('orders').select('*', { count: 'exact', head: true });
+  const { count: subs } = await supabase.from('subscribers').select('*', { count: 'exact', head: true });
+  const { count: msgs } = await supabase.from('messages').select('*', { count: 'exact', head: true });
+  const { count: books } = await supabase.from('books').select('*', { count: 'exact', head: true });
+  const { data: revData } = await supabase.from('orders').select('total_amount');
+  const revenue = (revData || []).reduce((acc, curr) => acc + (Number(curr.total_amount) || 0), 0);
+  
+  let podcastCount = 0;
   try {
-    const { ordersTable, subscribersTable, contactMessagesTable } = await import("@workspace/db/schema");
-    const { sql } = await import("drizzle-orm");
-    const [ordersCount] = await db.select({ count: sql`count(*)` }).from(ordersTable);
-    const [subsCount] = await db.select({ count: sql`count(*)` }).from(subscribersTable);
-    const [msgCount] = await db.select({ count: sql`count(*)` }).from(contactMessagesTable);
-    const [totalRevenue] = await db.select({ sum: sql`sum(total_amount)` }).from(ordersTable);
-    
-    return {
-      totalOrders: Number(ordersCount.count),
-      totalSubscribers: Number(subsCount.count),
-      totalMessages: Number(msgCount.count),
-      totalRevenue: Number(totalRevenue.sum || 0)
-    };
-  } catch (err) {
-    logger.warn({ err }, "Drizzle getStats failed, fallback to REST individual counts");
-    const { count: orders } = await supabase.from('orders').select('*', { count: 'exact', head: true });
-    const { count: subs } = await supabase.from('subscribers').select('*', { count: 'exact', head: true });
-    const { count: msgs } = await supabase.from('contact_messages').select('*', { count: 'exact', head: true });
-    
-    // Revenue is harder with REST without summing locally
-    const { data: revData } = await supabase.from('orders').select('total_amount');
-    const revenue = (revData || []).reduce((acc, curr) => acc + (Number(curr.total_amount) || 0), 0);
-
-    return {
-      totalOrders: orders || 0,
-      totalSubscribers: subs || 0,
-      totalMessages: msgs || 0,
-      totalRevenue: revenue
-    };
-  }
+    const resp = await fetch("https://rss.buzzsprout.com/1999543.rss", { headers: { "User-Agent": "Mozilla/5.0" } });
+    if (resp.ok) {
+      const xml = await resp.text();
+      const matches = xml.match(/<item>/g);
+      podcastCount = matches ? matches.length : 0;
+    }
+  } catch {}
+  
+  return {
+    totalBooks: books || 0,
+    totalOrders: orders || 0,
+    totalSubscribers: subs || 0,
+    totalPodcasts: podcastCount,
+    totalMessages: msgs || 0,
+    totalRevenue: revenue
+  };
 }
 
 export async function insertOrder(values: any) {
@@ -421,10 +415,15 @@ export async function deleteBook(id: number) {
     const { eq } = await import("drizzle-orm");
     await db.delete(booksTable).where(eq(booksTable.id, id));
     return true;
-  } catch (err) {
+  } catch (err: any) {
     logger.warn({ err }, "Drizzle deleteBook failed, fallback to REST");
     const { error } = await supabase.from('books').delete().eq('id', id);
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23503') {
+        throw new Error("Cannot delete book: it has associated orders. Delete or reassign orders first.");
+      }
+      throw error;
+    }
     return true;
   }
 }
@@ -437,7 +436,7 @@ export async function getMessages() {
   } catch (err) {
     logger.warn({ err }, "Drizzle getMessages failed, fallback to REST");
     const { data, error } = await supabase
-      .from('contact_messages')
+      .from('messages')
       .select('*')
       .order('created_at', { ascending: false });
     if (error) throw error;
@@ -458,11 +457,11 @@ export async function getSubscribers() {
     const { data, error } = await supabase
       .from('subscribers')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('subscribed_at', { ascending: false });
     if (error) throw error;
     return (data || []).map(s => ({
       ...s,
-      createdAt: new Date(s.created_at)
+      createdAt: new Date(s.subscribed_at)
     }));
   }
 }
@@ -486,3 +485,10 @@ export async function upsertPage(name: string, data: any) {
     .returning();
   return created;
 }
+
+
+
+
+
+
+

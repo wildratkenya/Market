@@ -1,7 +1,8 @@
-import { Link } from "wouter";
+﻿import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ArrowRight, BookOpen, Headphones, TrendingUp, Package, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePage } from "@/hooks/use-page";
 import { useListBooks, getListBooksQueryKey, useGetLatestPodcasts, getGetLatestPodcastsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ export default function Home() {
   const { data: books } = useListBooks({ query: { queryKey: getListBooksQueryKey() } });
   const { data: podcasts } = useGetLatestPodcasts({ query: { queryKey: getGetLatestPodcastsQueryKey() } });
 
+  const { data: homePage } = usePage("home");
   const latestBooks = books ? [...books].reverse().slice(0, 3) : undefined;
 
   return (
@@ -32,17 +34,16 @@ export default function Home() {
             className="relative z-10 max-w-2xl"
           >
             <Badge variant="outline" className="text-[#c9a227] border-[#c9a227]/50 mb-6 py-1 px-3 uppercase tracking-wider font-mono text-xs">
-              Latest Release
+              {homePage?.heroSubtitle || "Latest Release"}
             </Badge>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight">
-              Introduction to <span className="text-[#c9a227] italic">Money Markets</span>
+              {homePage?.heroTitle || "Introduction to Money Markets"}
             </h1>
             <p className="text-white/75 text-lg md:text-xl mb-10 leading-relaxed">
-              A comprehensive guide to understanding the global financial system and how it shapes the Kenyan economy. Demystifying bonds, T-bills, and interest rates for the everyday investor.
-            </p>
+              {homePage?.heroDescription || "A comprehensive guide to understanding the global financial system and how it shapes the Kenyan economy. Demystifying bonds, T-bills, and interest rates for the everyday investor."}</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg" className="text-lg px-8 py-6 h-auto bg-[#c9a227] text-[#0f2337] hover:bg-[#b8911e] font-bold">
-                <Link href="/books">Order Now <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                <Link href="/books">{homePage?.heroButtonText || "Order Now"} <ArrowRight className="ml-2 h-5 w-5" /></Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 h-auto text-white border-white/30 hover:bg-white/10 hover:text-white">
                 <Link href="/about">About the Author</Link>
@@ -330,3 +331,5 @@ export default function Home() {
     </div>
   );
 }
+
+

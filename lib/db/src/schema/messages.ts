@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
+﻿import { pgTable, serial, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -13,6 +13,8 @@ export const messagesTable = pgTable("messages", {
   readAt: timestamp("read_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const contactMessagesTable = messagesTable;
 
 export const insertMessageSchema = createInsertSchema(messagesTable).omit({ id: true, createdAt: true, readAt: true });
 export type InsertMessage = z.infer<typeof insertMessageSchema>;

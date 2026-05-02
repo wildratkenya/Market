@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { subscribersTable } from "@workspace/db/schema";
 import { CreateSubscriberBody } from "@workspace/api-zod";
@@ -18,7 +18,7 @@ router.get("/subscribers", requireAuth, async (_req, res) => {
       }))
     );
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Subscribers error:", JSON.stringify(err)); res.status(500).json({ error: "Internal server error", detail: err instanceof Error ? err.message : JSON.stringify(err) });
   }
 });
 
@@ -66,3 +66,5 @@ router.patch("/subscribers/:id/whatsapp", requireAuth, async (req, res) => {
 });
 
 export default router;
+
+

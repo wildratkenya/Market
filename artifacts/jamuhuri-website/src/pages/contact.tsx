@@ -1,3 +1,4 @@
+﻿import { usePage } from "@/hooks/use-page";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Mail, MessageSquare, CheckCircle, Loader2, ArrowRight } from "lucide-react";
@@ -17,6 +18,7 @@ const stagger = {
 };
 
 export default function Contact() {
+  const { data: contactPage } = usePage("contact");
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,13 +57,12 @@ export default function Contact() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#0f2337]/50 to-[#0f2337]" />
         <div className="relative z-10 container mx-auto px-6 max-w-3xl text-center">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
-            <motion.p variants={fadeUp} className="text-[#c9a227] text-sm font-semibold tracking-widest uppercase mb-4">Get in Touch</motion.p>
+            <motion.p variants={fadeUp} className="text-[#c9a227] text-sm font-semibold tracking-widest uppercase mb-4">{contactPage?.heroSubtitle || "Get in Touch"}</motion.p>
             <motion.h1 variants={fadeUp} className="text-5xl md:text-6xl font-serif font-bold text-white mb-6">
-              Contact &amp; Feedback
+              {contactPage?.heroTitle || "Contact & Feedback"}
             </motion.h1>
             <motion.p variants={fadeUp} className="text-white/70 text-lg leading-relaxed">
-              Questions about the books, podcast, or money markets? Send a message below.
-            </motion.p>
+              {contactPage?.heroDescription || "Questions about the books, podcast, or money markets? Send a message below."}</motion.p>
           </motion.div>
         </div>
       </section>
@@ -179,3 +180,4 @@ export default function Contact() {
     </div>
   );
 }
+

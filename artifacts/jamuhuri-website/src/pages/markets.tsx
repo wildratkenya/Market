@@ -1,3 +1,4 @@
+﻿import { usePage } from "@/hooks/use-page";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { ArrowRight, TrendingUp, BarChart3, Globe, DollarSign, Percent, Clock, ExternalLink } from "lucide-react";
@@ -58,6 +59,7 @@ const topics = [
 
 export default function Markets() {
   const { data: podcasts } = useListPodcasts({ query: { queryKey: getListPodcastsQueryKey() } });
+  const { data: marketsPage } = usePage("markets");
 
   return (
     <div className="bg-background text-foreground overflow-x-hidden">
@@ -76,15 +78,14 @@ export default function Markets() {
         <div className="relative z-10 container mx-auto px-6 max-w-4xl">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
             <motion.p variants={fadeUp} className="text-[#c9a227] text-sm font-semibold tracking-widest uppercase mb-4">
-              Financial Education
+              {marketsPage?.heroSubtitle || "Financial Education"}
             </motion.p>
             <motion.h1 variants={fadeUp} className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight mb-6">
-              Global & Kenyan<br />
-              <span className="text-[#c9a227] italic">Money Markets</span>
+              {marketsPage?.heroTitle || "Global & Kenyan Money Markets"}
             </motion.h1>
             <motion.p variants={fadeUp} className="text-white/70 text-lg max-w-2xl leading-relaxed">
-              Understanding the financial forces that shape Kenya's economy — from the US Federal Reserve
-              to the CBK, from Wall Street to the Nairobi Securities Exchange.
+              {marketsPage?.heroDescription || "Understanding the financial forces that shape Kenya's economy \u2014 from the US Federal Reserve to the CBK, from Wall Street to the Nairobi Securities Exchange."}
+
             </motion.p>
           </motion.div>
         </div>
@@ -244,3 +245,4 @@ export default function Markets() {
     </div>
   );
 }
+

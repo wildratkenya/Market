@@ -1,3 +1,4 @@
+﻿import { usePage } from "@/hooks/use-page";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useState } from "react";
@@ -19,6 +20,7 @@ const stagger = {
 };
 
 export default function About() {
+  const { data: aboutPage } = usePage("about");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -75,22 +77,20 @@ export default function About() {
           <motion.div initial="hidden" animate="visible" variants={stagger}>
             <motion.p
               variants={fadeUp}
-              className="text-[#c9a227] text-sm font-semibold tracking-widest uppercase mb-4"
-            >
-              About the Author
+              className="text-[#c9a227] text-sm font-semibold tracking-widest uppercase mb-4">
+              {aboutPage?.heroSubtitle || "About the Author"}
             </motion.p>
             <motion.h1
               variants={fadeUp}
               className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight mb-6"
             >
-              Jamuhuri <span className="text-[#c9a227] italic">Gachoroba</span>
+              {aboutPage?.heroTitle || "Jamuhuri Gachoroba"}
             </motion.h1>
             <motion.p
               variants={fadeUp}
-              className="text-white/70 text-lg md:text-xl max-w-2xl leading-relaxed"
-            >
-              Financial educator, author, and podcast host — on a mission to make Kenya's money markets
-              accessible to every Kenyan.
+              className="text-white/70 text-lg md:text-xl max-w-2xl leading-relaxed">
+              {aboutPage?.heroDescription || "Financial educator, author, and podcast host \u2014 on a mission to make Kenya's money markets accessible to every Kenyan."}
+
             </motion.p>
           </motion.div>
         </div>
@@ -361,3 +361,4 @@ export default function About() {
     </div>
   );
 }
+

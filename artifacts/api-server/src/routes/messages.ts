@@ -1,6 +1,7 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { messagesTable } from "@workspace/db/schema";
+import { eq } from "drizzle-orm";
 import { CreateMessageBody } from "@workspace/api-zod";
 import { requireAuth } from "../middleware/admin-auth";
 

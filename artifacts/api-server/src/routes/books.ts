@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { booksTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -148,18 +148,48 @@ router.put("/books/:id", requireEditor, async (req, res) => {
 });
 
 router.delete("/books/:id", requireSuperAdmin, async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    if (!Number.isInteger(id) || id <= 0) {
-      res.status(400).json({ error: "Invalid ID" });
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid ID" });
+    return;
+  }
+
+  const cascade = req.query.cascade === "true";
+
+  if (!cascade) {
+    const { supabase } = await import("../lib/supabase");
+    const { data: orders } = await supabase.from("orders").select("id, customer_name, status").eq("book_id", id);
+    if (orders && orders.length > 0) {
+      res.status(409).json({
+        error: "Cannot delete book with associated orders",
+        hasOrders: true,
+        orderCount: orders.length,
+        orders: orders,
+      });
       return;
     }
+  }
+
+  try {
+    if (cascade) {
+      const { supabase } = await import("../lib/supabase");
+      const { error: orderError } = await supabase.from("orders").delete().eq("book_id", id);
+      if (orderError) {
+        console.error("Cascade delete orders error:", orderError);
+        res.status(500).json({ error: "Failed to delete associated orders", detail: orderError.message });
+        return;
+      }
+    }
+
     const { deleteBook } = await import("../lib/data");
     await deleteBook(id);
-    res.json({ success: true });
+    res.json({ success: true, cascade });
   } catch (err) {
-    res.status(500).json({ error: "Failed to delete book" });
+    console.error("Delete book error:", err);
+    res.status(500).json({ error: "Failed to delete book", detail: err instanceof Error ? err.message : "Unknown error" });
   }
 });
 
+
 export default router;
+

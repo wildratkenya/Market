@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { ordersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -102,20 +102,41 @@ router.patch("/orders/:id/status", requireEditor, async (req, res) => {
     res.status(400).json({ error: "Invalid status", details: parsed.error.issues });
     return;
   }
-  const updateData: Record<string, unknown> = { status: parsed.data.status };
-  if (parsed.data.notes !== undefined) {
-    updateData.notes = parsed.data.notes;
+  try {
+    const updateData: Record<string, unknown> = { status: parsed.data.status };
+    if (parsed.data.notes !== undefined) {
+      updateData.notes = parsed.data.notes;
+    }
+    const [order] = await db
+      .update(ordersTable)
+      .set(updateData)
+      .where(eq(ordersTable.id, id))
+      .returning();
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    res.json(serializeOrder(order));
+  } catch {
+    try {
+      const { supabase } = await import("../lib/supabase");
+      const updateData: Record<string, unknown> = { status: parsed.data.status };
+      if (parsed.data.notes !== undefined) {
+        updateData.notes = parsed.data.notes;
+      }
+      const { data, error } = await supabase
+        .from("orders")
+        .update(updateData)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      res.json(serializeOrder(data));
+    } catch (err) {
+      console.error("Order status update error:", err);
+      res.status(500).json({ error: "Failed to update order status" });
+    }
   }
-  const [order] = await db
-    .update(ordersTable)
-    .set(updateData)
-    .where(eq(ordersTable.id, id))
-    .returning();
-  if (!order) {
-    res.status(404).json({ error: "Order not found" });
-    return;
-  }
-  res.json(serializeOrder(order));
 });
 
 export default router;
