@@ -299,7 +299,7 @@ export default async function handler(req, res) {
     if (path === '/api/orders' && method === 'GET') {
       const auth = requireAuth(req, res);
       if (!auth) return;
-      const data = await supabaseQuery('orders', 'order=created_at.desc');
+      const data = await supabaseQuery('orders', 'order=subscribed_at.desc');
       return res.status(200).json(snakeToCamel(data));
     }
 
@@ -319,8 +319,11 @@ export default async function handler(req, res) {
     if (path === '/api/subscribers' && method === 'POST') {
       const body = await readBody(req);
       const result = await supabaseInsert('subscribers', {
+        name: body.name || null,
         email: body.email,
-        source: body.source || 'website',
+        phone: body.phone || null,
+        wants_whatsapp: body.wantsWhatsapp || false,
+        whatsapp_approved: false,
       });
       return res.status(201).json(snakeToCamel(result));
     }
@@ -328,8 +331,48 @@ export default async function handler(req, res) {
     if (path === '/api/subscribers' && method === 'GET') {
       const auth = requireAuth(req, res);
       if (!auth) return;
-      const data = await supabaseQuery('subscribers', 'order=created_at.desc');
+      const data = await supabaseQuery('subscribers', 'order=subscribed_at.desc');
       return res.status(200).json(snakeToCamel(data));
+    }
+
+    if (path.match(/^\/api\/subscribers\/\d+\/whatsapp$/) && method === 'PATCH') {
+      const auth = requireAuth(req, res);
+      if (!auth) return;
+      const id = parseInt(path.split('/')[2]);
+      const body = await readBody(req);
+      const result = await supabaseUpdate('subscribers', id, {
+        whatsapp_approved: body.approved || false,
+      });
+      return res.json(snakeToCamel(result));
+    }
+
+    // ========== MESSAGES ==========
+    if (path === '/api/messages' && method === 'POST') {
+      const body = await readBody(req);
+      const result = await supabaseInsert('messages', {
+        type: body.type || 'contact',
+        subject: body.subject || null,
+        body: body.body,
+        sender_email: body.senderEmail || null,
+      });
+      return res.status(201).json(snakeToCamel(result));
+    }
+
+    if (path === '/api/messages' && method === 'GET') {
+      const auth = requireAuth(req, res);
+      if (!auth) return;
+      const data = await supabaseQuery('messages', 'order=subscribed_at.desc');
+      return res.status(200).json(snakeToCamel(data));
+    }
+
+    if (path.match(/^\/api\/messages\/\d+\/read$/) && method === 'PATCH') {
+      const auth = requireAuth(req, res);
+      if (!auth) return;
+      const id = parseInt(path.split('/')[2]);
+      const result = await supabaseUpdate('messages', id, {
+        read_at: new Date().toISOString(),
+      });
+      return res.json(snakeToCamel(result));
     }
 
     // ========== STATS ==========
