@@ -1,6 +1,17 @@
 const SUPABASE_URL = 'https://nualwgobuhklnoaeawrz.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
+function snakeToCamel(obj) {
+  if (Array.isArray(obj)) return obj.map(snakeToCamel);
+  if (obj === null || typeof obj !== 'object') return obj;
+  const result = {};
+  for (const key of Object.keys(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, function(m, c) { return c.toUpperCase(); });
+    result[camelKey] = snakeToCamel(obj[key]);
+  }
+  return result;
+}
+
 async function supabaseQuery(table, query) {
   const url = SUPABASE_URL + '/rest/v1/' + table + '?' + query;
   const res = await fetch(url, {
@@ -31,18 +42,19 @@ export default async function handler(req, res) {
   try {
     if (path === '/api/books' && req.method === 'GET') {
       const data = await supabaseQuery('books', 'order=id.asc');
-      return res.status(200).json(data);
+      return res.status(200).json(snakeToCamel(data));
     }
 
     if (path === '/api/podcasts/latest') {
       const data = await supabaseQuery('podcasts', 'order=published_at.desc&limit=3');
-      return res.status(200).json(data);
+      return res.status(200).json(snakeToCamel(data));
     }
 
     if (path.startsWith('/api/pages/')) {
       const pageName = path.replace('/api/pages/', '');
       const data = await supabaseQuery('site_pages', 'page_name=eq.' + pageName);
-      return res.status(200).json(Array.isArray(data) ? data[0] || null : data);
+      const result = Array.isArray(data) ? data[0] || null : data;
+      return res.status(200).json(snakeToCamel(result));
     }
 
     return res.status(404).json({ error: 'Not found', path });
