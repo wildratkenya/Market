@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useState } from "react";
-import { ArrowRight, Mic, BookOpen, Users, ExternalLink, CheckCircle, Loader2 } from "lucide-react";
+import { ArrowRight, Mic, BookOpen, Users, ExternalLink, CheckCircle, Loader2, Target, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,6 +29,20 @@ export default function About() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const bioContent = (() => {
+    const raw = aboutPage?.bodyContent;
+    if (!raw) return { bio: "", vision: "", mission: "" };
+    const visionMatch = raw.match(/VISION:\s*([\s\S]*?)(?=MISSION:|$)/);
+    const missionMatch = raw.match(/MISSION:\s*([\s\S]*?)$/);
+    const vision = visionMatch ? visionMatch[1].trim() : "";
+    const mission = missionMatch ? missionMatch[1].trim() : "";
+    let bio = raw.replace(/BELIEF:[\s\S]*?(?=VISION:|$)/, "");
+    bio = bio.replace(/VISION:[\s\S]*?(?=MISSION:|$)/, "");
+    bio = bio.replace(/MISSION:[\s\S]*$/, "");
+    bio = bio.replace(/\n{2,}/g, "\n\n").trim();
+    return { bio, vision, mission };
+  })();
 
   const { mutate: subscribe, isPending } = useCreateSubscriber({
     mutation: {
@@ -129,8 +143,8 @@ export default function About() {
                 A Voice for Financial Literacy in Kenya
               </h2>
               <div className="mb-12 md:columns-2 md:gap-8 [&>p]:mb-4 [&>p]:break-inside-avoid text-muted-foreground leading-relaxed">
-                {aboutPage?.bodyContent ? (
-                  aboutPage.bodyContent.split('\n\n').map((paragraph, i) => (
+                {bioContent.bio ? (
+                  bioContent.bio.split('\n\n').map((paragraph, i) => (
                     <p key={i} className="whitespace-pre-line">{paragraph}</p>
                   ))
                 ) : (
@@ -153,6 +167,33 @@ export default function About() {
                   </>
                 )}
               </div>
+
+              {(bioContent.vision || bioContent.mission) && (
+                <div className="grid md:grid-cols-2 gap-6 mb-12">
+                  {bioContent.vision && (
+                    <div className="p-6 rounded-2xl border border-border bg-card">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-[#c9a227]/15 flex items-center justify-center">
+                          <Target className="h-5 w-5 text-[#c9a227]" />
+                        </div>
+                        <h3 className="text-lg font-bold text-foreground">Vision</h3>
+                      </div>
+                      <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{bioContent.vision}</p>
+                    </div>
+                  )}
+                  {bioContent.mission && (
+                    <div className="p-6 rounded-2xl border border-border bg-card">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-[#c9a227]/15 flex items-center justify-center">
+                          <Lightbulb className="h-5 w-5 text-[#c9a227]" />
+                        </div>
+                        <h3 className="text-lg font-bold text-foreground">Mission</h3>
+                      </div>
+                      <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{bioContent.mission}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-3 gap-6 mb-10">
                 {[
