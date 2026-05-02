@@ -178,10 +178,11 @@ export default async function handler(req, res) {
       return res.status(200).json(snakeToCamel(data));
     }
 
-    if (path.startsWith('/api/pages/')) {
-      const pageName = path.replace('/api/pages/', '');
+    if (path.startsWith('/api/pages/') && (method === 'GET' || method === 'HEAD')) {
+      const pageName = path.replace('/api/pages/', '').split('?')[0];
       const data = await supabaseQuery('site_pages', 'page_name=eq.' + pageName);
       const result = Array.isArray(data) ? data[0] || null : data;
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
       return res.status(200).json(snakeToCamel(result));
     }
 

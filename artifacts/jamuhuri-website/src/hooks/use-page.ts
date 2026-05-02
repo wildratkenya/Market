@@ -24,12 +24,16 @@ export function usePage(name: string) {
   const { data, isLoading, error } = useQuery<PageData | null, Error>({
     queryKey: ["/api/pages", name],
     queryFn: async () => {
-      const res = await fetch(`/api/pages/${name}`);
+      const res = await fetch(`/api/pages/${name}?t=${Date.now()}`, {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Not found");
       return res.json();
     },
     staleTime: 1000 * 60 * 5,
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   return { data: data ?? null, loading: isLoading, error: error?.message ?? null };
