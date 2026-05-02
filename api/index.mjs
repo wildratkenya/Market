@@ -299,7 +299,7 @@ export default async function handler(req, res) {
     if (path === '/api/orders' && method === 'GET') {
       const auth = requireAuth(req, res);
       if (!auth) return;
-      const data = await supabaseQuery('orders', 'order=subscribed_at.desc');
+      const data = await supabaseQuery('orders', 'order=created_at.desc');
       return res.status(200).json(snakeToCamel(data));
     }
 
@@ -361,7 +361,7 @@ export default async function handler(req, res) {
     if (path === '/api/messages' && method === 'GET') {
       const auth = requireAuth(req, res);
       if (!auth) return;
-      const data = await supabaseQuery('messages', 'order=subscribed_at.desc');
+      const data = await supabaseQuery('messages', 'order=created_at.desc');
       return res.status(200).json(snakeToCamel(data));
     }
 
