@@ -398,7 +398,7 @@ export default async function handler(req, res) {
     }
 
     // ========== PAGES CRUD ==========
-    if (path.startsWith('/api/pages/') && method === 'PATCH') {
+    if (path.startsWith('/api/pages/') && (method === 'PATCH' || method === 'PUT')) {
       const auth = requireAuth(req, res);
       if (!auth) return;
       const pageName = path.split('/api/pages/')[1];
