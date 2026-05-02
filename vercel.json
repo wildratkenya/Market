@@ -1,1 +1,8 @@
-{"buildCommand": "cd artifacts/jamuhuri-website && pnpm exec vite build", "outputDirectory": "artifacts/jamuhuri-website/dist/public", "installCommand": "pnpm install"}
+{
+  "buildCommand": "cd artifacts/jamuhuri-website && pnpm exec vite build",
+  "outputDirectory": "artifacts/jamuhuri-website/dist/public",
+  "installCommand": "pnpm install",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
