@@ -1,66 +1,48 @@
-const SUPABASE_URL = 'https://nualwgobuhklnoaeawrz.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+import { createClient } from "@supabase/supabase-js";
 
-async function supabaseQuery(table: string, query: string) {
-  const url = SUPABASE_URL + '/rest/v1/' + table + '?' + query;
-  const res = await fetch(url, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'count=none',
-    },
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error('Supabase error: ' + res.status + ' ' + err);
-  }
-  return res.json();
-}
-
-export const config = {
-  api: {
-    bodyParser: true,
-  },
-};
+const supabaseUrl = process.env.SUPABASE_URL || "https://nualwgobuhklnoaeawrz.supabase.co";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req: any, res: any) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  const url = new URL(req.url, 'http://localhost');
+  const url = new URL(req.url || "/", "http://localhost");
   const path = url.pathname;
-  const method = req.method;
 
   try {
-    if (path === '/api/books' && method === 'GET') {
-      const data = await supabaseQuery('books', 'order=id.asc');
+    if (path === "/api/books" && req.method === "GET") {
+      const { data, error } = await supabase.from("books").select("*").order("id", { ascending: true });
+      if (error) throw error;
+      return res.status(200).json(data || []);
+    }
+
+    if (path === "/api/podcasts/latest") {
+      const { data, error } = await supabase.from("podcasts").select("*").order("published_at", { ascending: false }).limit(3);
+      if (error) throw error;
+      return res.status(200).json(data || []);
+    }
+
+    if (path.startsWith("/api/pages/")) {
+      const pageName = path.replace("/api/pages/", "");
+      const { data, error } = await supabase.from("site_pages").select("*").eq("page_name", pageName).maybeSingle();
+      if (error) throw error;
       return res.status(200).json(data);
     }
 
-    if (path === '/api/podcasts/latest') {
-      const data = await supabaseQuery('podcasts', 'order=published_at.desc&limit=3');
-      return res.status(200).json(data);
-    }
-
-    if (path.startsWith('/api/pages/')) {
-      const pageName = path.split('/api/pages/')[1];
-      const data = await supabaseQuery('site_pages', 'page_name=eq.' + pageName);
-      return res.status(200).json(Array.isArray(data) ? data[0] || null : data);
-    }
-
-    if (path === '/api/healthz') {
+    if (path === "/api/healthz") {
       return res.status(200).json({ ok: true });
     }
 
-    return res.status(404).json({ error: 'Not found', path });
+    return res.status(404).json({ error: "Not found", path });
   } catch (err: any) {
-    console.error('API error:', err);
-    return res.status(500).json({ error: err.message || 'Internal server error' });
+    console.error("API error:", err);
+    return res.status(500).json({ error: err.message || "Internal server error" });
   }
 }
