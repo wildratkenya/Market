@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,8 +14,6 @@ import AdminLogin from "@/pages/admin-login";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AdminAuthProvider } from "@/contexts/admin-auth-context";
-import { setBaseUrl } from "@workspace/api-client-react";
-
 import { setBaseUrl } from "@workspace/api-client-react";
 import { useEffect, useState } from "react";
 
@@ -74,3 +72,6 @@ function App() {
 }
 
 export default App;
+
+
+

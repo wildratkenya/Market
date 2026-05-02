@@ -466,3 +466,23 @@ export async function getSubscribers() {
     }));
   }
 }
+
+export async function upsertPage(name: string, data: any) {
+  const { sitePagesTable } = await import("@workspace/db/schema");
+  const { eq } = await import("drizzle-orm");
+  const [existing] = await db.select().from(sitePagesTable).where(eq(sitePagesTable.pageName, name));
+  const updatedAt = new Date();
+  if (existing) {
+    const [updated] = await db
+      .update(sitePagesTable)
+      .set({ ...data, updatedAt })
+      .where(eq(sitePagesTable.pageName, name))
+      .returning();
+    return updated;
+  }
+  const [created] = await db
+    .insert(sitePagesTable)
+    .values({ ...data, pageName: name, createdAt: new Date(), updatedAt })
+    .returning();
+  return created;
+}

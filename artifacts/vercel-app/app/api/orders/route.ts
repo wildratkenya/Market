@@ -46,8 +46,7 @@ export async function POST(request: NextRequest) {
     const snakeBody = toSnakeCase(body);
     const { data, error } = await supabase.from("orders").insert(snakeBody).select().single();
     if (error) {
-      console.error("Order insert error:", error);
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return NextResponse.json({ error: error.message, details: error.details, hint: error.hint }, { status: 400 });
     }
     return NextResponse.json(toCamelCase(data), { status: 201 });
   } catch (e) {

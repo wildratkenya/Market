@@ -206,3 +206,40 @@ export interface StatsSummary {
 export type DeleteBook200 = {
   success: boolean;
 };
+
+export interface SitePage {
+  id: number;
+  pageName: string;
+  pageTitle: string;
+  heroTitle?: string | null;
+  heroSubtitle?: string | null;
+  heroDescription?: string | null;
+  heroImage?: string | null;
+  heroButton?: string | null;
+  heroButtonText?: string | null;
+  bodyContent?: string | null;
+  footerContent?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  socialLinks?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdatePageBody {
+  pageName: string;
+  pageTitle: string;
+  heroTitle?: string | null;
+  heroSubtitle?: string | null;
+  heroDescription?: string | null;
+  heroImage?: string | null;
+  heroButton?: string | null;
+  heroButtonText?: string | null;
+  bodyContent?: string | null;
+  footerContent?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  socialLinks?: string | null;
+}

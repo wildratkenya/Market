@@ -85,6 +85,8 @@ export default function Books() {
   const vatAmount = totalPrice * (16 / 116);
   const subtotal = totalPrice - vatAmount;
 
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
   const onSubmit = (values: z.infer<typeof orderSchema>) => {
     if (!selectedBook) return;
 
@@ -153,7 +155,7 @@ export default function Books() {
                 placeholder="Search books by title or topic..." 
                 className="pl-10 h-12 text-base"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); scrollToTop(); }}
               />
             </div>
             <div className="flex items-center gap-2 text-muted-foreground w-full md:w-auto justify-end">

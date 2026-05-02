@@ -1,4 +1,4 @@
-openapi: 3.1.0
+﻿openapi: 3.1.0
 info:
   title: Api
   version: 0.1.0
@@ -19,7 +19,73 @@ tags:
     description: Podcast subscriber management
   - name: messages
     description: Backend messages
+  - name: pages
+    description: Site page content management
 paths:
+  /pages:
+    get:
+      operationId: listPages
+      tags: [pages]
+      summary: List all site pages
+      responses:
+        "200":
+          description: List of pages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SitePage"
+    /pages/{name}:
+    get:
+      operationId: getPage
+      tags: [pages]
+      summary: Get a site page by name
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Page content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SitePage"
+        "404":
+          description: Page not found
+    put:
+      operationId: updatePage
+      tags: [pages]
+      summary: Update or create a site page (admin)
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePageBody"
+      responses:
+        "200":
+          description: Page updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SitePage"
+        "201":
+          description: Page created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SitePage"
+
   /healthz:
     get:
       operationId: healthCheck
@@ -676,3 +742,112 @@ components:
         - totalOrders
         - totalSubscribers
         - totalPodcasts
+
+    SitePage:
+      type: object
+      properties:
+        id:
+          type: integer
+        pageName:
+          type: string
+        pageTitle:
+          type: string
+        heroTitle:
+          type: string
+          nullable: true
+        heroSubtitle:
+          type: string
+          nullable: true
+        heroDescription:
+          type: string
+          nullable: true
+        heroImage:
+          type: string
+          nullable: true
+        heroButton:
+          type: string
+          nullable: true
+        heroButtonText:
+          type: string
+          nullable: true
+        bodyContent:
+          type: string
+          nullable: true
+        footerContent:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        socialLinks:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - pageName
+        - pageTitle
+        - createdAt
+        - updatedAt
+
+    UpdatePageBody:
+      type: object
+      properties:
+        pageName:
+          type: string
+        pageTitle:
+          type: string
+        heroTitle:
+          type: string
+          nullable: true
+        heroSubtitle:
+          type: string
+          nullable: true
+        heroDescription:
+          type: string
+          nullable: true
+        heroImage:
+          type: string
+          nullable: true
+        heroButton:
+          type: string
+          nullable: true
+        heroButtonText:
+          type: string
+          nullable: true
+        bodyContent:
+          type: string
+          nullable: true
+        footerContent:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        socialLinks:
+          type: string
+          nullable: true
+      required:
+        - pageName
+        - pageTitle
+
+
+
+
