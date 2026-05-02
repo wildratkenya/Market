@@ -8,8 +8,8 @@ import { requireAuth, requireEditor } from "../middleware/admin-auth";
 const router: IRouter = Router();
 
 const SitePageBodySchema = z.object({
-  pageName: z.string().min(1),
-  pageTitle: z.string().min(1),
+  pageName: z.string().min(1).optional(),
+  pageTitle: z.string().min(1).optional(),
   heroTitle: z.string().nullable().optional(),
   heroSubtitle: z.string().nullable().optional(),
   heroDescription: z.string().nullable().optional(),
@@ -77,7 +77,22 @@ router.put("/pages/:name", requireEditor, async (req, res) => {
       return;
     }
     const { supabase } = await import("../lib/supabase");
-    const { data, error } = await supabase.from("site_pages").update(parsed.data).eq("page_name", req.params.name).select().single();
+    const snakeData: Record<string, any> = {};
+    if (parsed.data.pageName !== undefined) snakeData.page_name = parsed.data.pageName;
+    if (parsed.data.pageTitle !== undefined) snakeData.page_title = parsed.data.pageTitle;
+    if (parsed.data.heroTitle !== undefined) snakeData.hero_title = parsed.data.heroTitle;
+    if (parsed.data.heroSubtitle !== undefined) snakeData.hero_subtitle = parsed.data.heroSubtitle;
+    if (parsed.data.heroDescription !== undefined) snakeData.hero_description = parsed.data.heroDescription;
+    if (parsed.data.heroImage !== undefined) snakeData.hero_image = parsed.data.heroImage;
+    if (parsed.data.heroButton !== undefined) snakeData.hero_button = parsed.data.heroButton;
+    if (parsed.data.heroButtonText !== undefined) snakeData.hero_button_text = parsed.data.heroButtonText;
+    if (parsed.data.bodyContent !== undefined) snakeData.body_content = parsed.data.bodyContent;
+    if (parsed.data.footerContent !== undefined) snakeData.footer_content = parsed.data.footerContent;
+    if (parsed.data.phone !== undefined) snakeData.phone = parsed.data.phone;
+    if (parsed.data.email !== undefined) snakeData.email = parsed.data.email;
+    if (parsed.data.address !== undefined) snakeData.address = parsed.data.address;
+    if (parsed.data.socialLinks !== undefined) snakeData.social_links = parsed.data.socialLinks;
+    const { data, error } = await supabase.from("site_pages").update(snakeData).eq("page_name", req.params.name).select().single();
     if (error) throw error;
     res.json(serializePage(data));
   } catch (err) {
