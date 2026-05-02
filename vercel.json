@@ -3,7 +3,7 @@
   "outputDirectory": "artifacts/jamuhuri-website/dist/public",
   "installCommand": "pnpm install",
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/index.ts" }
+    { "src": "/api/(.*)", "dest": "/api/index.mjs" }
   ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
