@@ -5,7 +5,46 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-fallback-do-not-use-in-production';
 const TOKEN_EXPIRY_SECONDS = 24 * 60 * 60;
 
-function snakeToCamel(obj) {
+const RSS_URL = 'https://rss.buzzsprout.com/1999543.rss';
+const BUZZSPROUT_BASE = 'https://www.buzzsprout.com/1999543';
+
+function parseDuration(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return mins + ':' + secs.toString().padStart(2, '0');
+}
+
+async function parseRSS(limit) {
+  const response = await fetch(RSS_URL, {
+    headers: { 'User-Agent': 'Mozilla/5.0' },
+  });
+  if (!response.ok) throw new Error('RSS fetch failed');
+  const xml = await response.text();
+  const items = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let match;
+  while ((match = itemRegex.exec(xml)) !== null) {
+    if (items.length >= limit) break;
+    const content = match[1];
+    const getTag = function(tag) {
+      const regex = new RegExp('<' + tag + '[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/' + tag + '>|<' + tag + '[^>]*>([\\s\\S]*?)<\\/' + tag + '>', 'i');
+      const m = content.match(regex);
+      return m ? (m[1] || m[2] || '').trim() : '';
+    };
+    const durationSeconds = parseInt(getTag('itunes:duration')) || 0;
+    const enclosure = content.match(/<enclosure[^>]+url="([^"]+)"/);
+    items.push({
+      id: items.length + 1,
+      title: getTag('title'),
+      description: getTag('description').replace(/<[^>]*>/g, '').substring(0, 300),
+      publishedAt: getTag('pubDate'),
+      duration: parseDuration(durationSeconds),
+      audioUrl: enclosure ? enclosure[1] : '',
+      buzzsproutUrl: BUZZSPROUT_BASE,
+    });
+  }
+  return items;
+}
   if (Array.isArray(obj)) return obj.map(snakeToCamel);
   if (obj === null || typeof obj !== 'object') return obj;
   const result = {};
@@ -174,8 +213,33 @@ export default async function handler(req, res) {
     }
 
     if (path === '/api/podcasts/latest') {
-      const data = await supabaseQuery('podcasts', 'order=published_at.desc&limit=3');
-      return res.status(200).json(snakeToCamel(data));
+      try {
+        const items = await parseRSS(3);
+        return res.status(200).json(items);
+      } catch (err) {
+        console.error('RSS parse error:', err);
+        try {
+          const data = await supabaseQuery('podcasts', 'order=published_at.desc&limit=3');
+          return res.status(200).json(snakeToCamel(data));
+        } catch {
+          return res.status(500).json({ error: 'Failed to fetch latest podcasts' });
+        }
+      }
+    }
+
+    if (path === '/api/podcasts') {
+      try {
+        const items = await parseRSS(100);
+        return res.status(200).json(items);
+      } catch (err) {
+        console.error('RSS parse error:', err);
+        try {
+          const data = await supabaseQuery('podcasts', 'order=published_at.desc&limit=100');
+          return res.status(200).json(snakeToCamel(data));
+        } catch {
+          return res.status(500).json({ error: 'Failed to fetch podcasts' });
+        }
+      }
     }
 
     if (path.startsWith('/api/pages/') && (method === 'GET' || method === 'HEAD')) {
