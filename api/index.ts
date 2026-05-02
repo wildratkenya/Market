@@ -1,19 +1,19 @@
-﻿const SUPABASE_URL = 'https://nualwgobuhklnoaeawrz.supabase.co';
+const SUPABASE_URL = 'https://nualwgobuhklnoaeawrz.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 async function supabaseQuery(table: string, query: string) {
-  const url = \\/rest/v1/\?\\;
+  const url = SUPABASE_URL + '/rest/v1/' + table + '?' + query;
   const res = await fetch(url, {
     headers: {
       'apikey': SUPABASE_KEY,
-      'Authorization': \Bearer \\,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
       'Content-Type': 'application/json',
       'Prefer': 'count=none',
     },
   });
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(\Supabase error: \ \\);
+    throw new Error('Supabase error: ' + res.status + ' ' + err);
   }
   return res.json();
 }
@@ -50,7 +50,7 @@ export default async function handler(req: any, res: any) {
 
     if (path.startsWith('/api/pages/')) {
       const pageName = path.split('/api/pages/')[1];
-      const data = await supabaseQuery('site_pages', \page_name=eq.\\);
+      const data = await supabaseQuery('site_pages', 'page_name=eq.' + pageName);
       return res.status(200).json(Array.isArray(data) ? data[0] || null : data);
     }
 
