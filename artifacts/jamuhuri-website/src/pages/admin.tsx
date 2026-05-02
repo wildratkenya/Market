@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import PagesTab from "./admin-pages-tab";
 import { useToast } from "@/hooks/use-toast";
@@ -134,6 +134,10 @@ function BookFormDialog({
   const updateBook = useUpdateBook();
   const [form, setForm] = useState(initialData ?? EMPTY_BOOK_FORM);
 
+  useEffect(() => {
+    setForm(initialData ?? EMPTY_BOOK_FORM);
+  }, [initialData]);
+
   const isEdit = bookId !== undefined;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -217,6 +221,9 @@ function BookFormDialog({
         <div className="bg-[#0f2337] px-6 py-5 text-white shrink-0">
           <DialogHeader>
             <DialogTitle className="text-xl font-serif">{isEdit ? "Edit Book" : "Add New Book"}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {isEdit ? "Update the book's details including title, author, cover, and pricing." : "Create a new book entry with title, author, cover image, and pricing information."}
+            </DialogDescription>
           </DialogHeader>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
