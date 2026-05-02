@@ -16,6 +16,15 @@ import { Footer } from "@/components/layout/Footer";
 import { AdminAuthProvider } from "@/contexts/admin-auth-context";
 import { setBaseUrl } from "@workspace/api-client-react";
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
+
+function ScrollToTop() {
+  const [location] = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+  return null;
+}
 
 const queryClient = new QueryClient();
 
@@ -62,6 +71,7 @@ function App() {
       <AdminAuthProvider>
         <TooltipProvider>
           <WouterRouter base={(import.meta.env.VITE_BASE_URL || "/").replace(/\/$/, "")}>
+            <ScrollToTop />
             <Router />
           </WouterRouter>
           <Toaster />
