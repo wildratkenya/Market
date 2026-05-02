@@ -97,79 +97,80 @@ export default function About() {
       </section>
 
       {/* Bio Section */}
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-6 max-w-3xl">
-          <motion.div
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            className="mb-10"
-          >
-            <div className="w-56 h-56 mx-auto rounded-2xl overflow-hidden bg-[#0f2337] relative shadow-lg">
-              <img
-                src={authorPhoto}
-                alt="Jamuhuri Gachoroba"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f2337]/70 to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                <p className="text-white font-serif text-lg font-bold">Jamuhuri Gachoroba</p>
-                <p className="text-[#c9a227] text-xs">Financial Expert & Author</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-            className="text-center"
-          >
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-8">
-              A Voice for Financial Literacy in Kenya
-            </h2>
-            <div className="space-y-4 text-muted-foreground leading-relaxed whitespace-pre-line text-left mb-12">
-              {aboutPage?.bodyContent || (
-                <>
-                  <p>
-                    Jamuhuri Gachoroba is one of Kenya's foremost voices on financial market education.
-                    With years of experience studying and analyzing both global and local financial markets,
-                    he has dedicated his career to breaking down complex financial concepts for ordinary Kenyans.
-                  </p>
-                  <p>
-                    His work bridges the gap between sophisticated financial theory and everyday economic reality —
-                    helping readers and listeners understand how decisions made in Washington, London, and Beijing
-                    ripple through to prices in Nairobi's markets.
-                  </p>
-                  <p>
-                    Through his books and weekly podcast, Jamuhuri has built a growing community of financially
-                    conscious Kenyans who are equipped to make better decisions about savings, investments,
-                    and understanding the macroeconomic forces shaping their lives.
-                  </p>
-                </>
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto mb-10">
-              {[
-                { icon: BookOpen, label: "2 Books", sub: "Published" },
-                { icon: Mic, label: "Weekly", sub: "Podcasts" },
-                { icon: Users, label: "Growing", sub: "Community" },
-              ].map((item) => (
-                <div key={item.label} className="text-center p-4 rounded-xl border border-border bg-card">
-                  <item.icon className="h-6 w-6 text-[#c9a227] mx-auto mb-2" />
-                  <p className="font-bold text-foreground">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">{item.sub}</p>
+      <section className="py-24 bg-background">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7 }}
+              className="md:sticky md:top-8"
+            >
+              <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-[#0f2337] relative shadow-lg">
+                <img
+                  src={authorPhoto}
+                  alt="Jamuhuri Gachoroba"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f2337]/70 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6">
+                  <p className="text-white font-serif text-xl font-bold">Jamuhuri Gachoroba</p>
+                  <p className="text-[#c9a227] text-sm">Financial Expert & Author</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            </motion.div>
 
-            <div className="flex justify-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+            >
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-8">
+                A Voice for Financial Literacy in Kenya
+              </h2>
+              <div className="space-y-4 text-muted-foreground leading-relaxed whitespace-pre-line mb-12">
+                {aboutPage?.bodyContent || (
+                  <>
+                    <p>
+                      Jamuhuri Gachoroba is one of Kenya's foremost voices on financial market education.
+                      With years of experience studying and analyzing both global and local financial markets,
+                      he has dedicated his career to breaking down complex financial concepts for ordinary Kenyans.
+                    </p>
+                    <p>
+                      His work bridges the gap between sophisticated financial theory and everyday economic reality —
+                      helping readers and listeners understand how decisions made in Washington, London, and Beijing
+                      ripple through to prices in Nairobi's markets.
+                    </p>
+                    <p>
+                      Through his books and weekly podcast, Jamuhuri has built a growing community of financially
+                      conscious Kenyans who are equipped to make better decisions about savings, investments,
+                      and understanding the macroeconomic forces shaping their lives.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 gap-6 mb-10">
+                {[
+                  { icon: BookOpen, label: "2 Books", sub: "Published" },
+                  { icon: Mic, label: "Weekly", sub: "Podcasts" },
+                  { icon: Users, label: "Growing", sub: "Community" },
+                ].map((item) => (
+                  <div key={item.label} className="text-center p-4 rounded-xl border border-border bg-card">
+                    <item.icon className="h-6 w-6 text-[#c9a227] mx-auto mb-2" />
+                    <p className="font-bold text-foreground">{item.label}</p>
+                    <p className="text-xs text-muted-foreground">{item.sub}</p>
+                  </div>
+                ))}
+              </div>
+
               <Link href="/books">
                 <Button className="bg-[#c9a227] text-[#0f2337] hover:bg-[#b8911e] font-semibold">
                   Explore the Books <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
