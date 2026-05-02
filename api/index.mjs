@@ -247,7 +247,7 @@ export default async function handler(req, res) {
       return res.status(201).json(snakeToCamel(result));
     }
 
-    if (path.match(/^\/api\/books\/\d+$/) && method === 'PATCH') {
+    if (path.match(/^\/api\/books\/\d+$/) && (method === 'PATCH' || method === 'PUT')) {
       const auth = requireAuth(req, res);
       if (!auth) return;
       const id = parseInt(path.split('/').pop());
