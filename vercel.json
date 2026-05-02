@@ -2,6 +2,10 @@
   "buildCommand": "cd artifacts/jamuhuri-website && pnpm exec vite build",
   "outputDirectory": "artifacts/jamuhuri-website/dist/public",
   "installCommand": "pnpm install",
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index" },
+    { "src": "/images/(.*)", "dest": "/api/index" }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
