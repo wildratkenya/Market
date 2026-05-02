@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -136,6 +136,35 @@ function BookFormDialog({
 
   const isEdit = bookId !== undefined;
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (file: File) => {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const fileName = Date.now() + '-' + Math.round(Math.random() * 1e9) + '.' + ext;
+    const url = import.meta.env.VITE_SUPABASE_URL + '/storage/v1/object/books/' + fileName;
+    const token = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          apikey: token,
+          Authorization: 'Bearer ' + token,
+          'Content-Type': file.type,
+          'x-upsert': 'true',
+        },
+        body: file,
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
+      const publicUrl = import.meta.env.VITE_SUPABASE_URL + '/storage/v1/object/public/books/' + fileName;
+      setForm(f => ({ ...f, coverImage: publicUrl }));
+    } catch {
+      toast({ variant: 'destructive', title: 'Upload failed', description: 'Could not upload the image.' });
+    }
+  };
+
   const set = (field: keyof typeof EMPTY_BOOK_FORM) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -256,25 +285,11 @@ function BookFormDialog({
                         accept="image/*" 
                         className="hidden" 
                         id="cover-upload" 
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const formData = new FormData();
-                          formData.append("image", file);
-                          try {
-                            const token = localStorage.getItem("adminToken") || "";
-                            const res = await fetch("/api/upload", {
-                              method: "POST",
-                              headers: { "Authorization": `Bearer ${token}` },
-                              body: formData,
-                            });
-                            if (!res.ok) throw new Error("Upload failed");
-                            const data = await res.json();
-                            setForm(f => ({ ...f, coverImage: data.url }));
-                          } catch {
-                            toast({ variant: "destructive", title: "Upload failed", description: "Could not upload the image." });
-                          }
-                        }}
+                         onChange={async (e) => {
+                           const file = e.target.files?.[0];
+                           if (!file) return;
+                           await handleFileUpload(file);
+                         }}
                       />
                       <Button
                         type="button" 
@@ -285,7 +300,7 @@ function BookFormDialog({
                       >
                         <Plus className="h-4 w-4" /> Upload Image
                       </Button>
-                      <p className="text-[10px] text-muted-foreground italic">Saved in /public/images</p>
+                       <p className="text-[10px] text-muted-foreground italic">Stored in Supabase</p>
                     </div>
                   </div>
                 </div>
