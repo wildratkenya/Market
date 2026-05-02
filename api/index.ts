@@ -16,5 +16,5 @@ export default async function handler(req: any, res: any) {
   }
   
   // Handle the request with Express
-  app(req, res);
+  (app as any)(req, res);
 }
