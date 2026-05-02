@@ -128,8 +128,12 @@ export default function About() {
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mb-8">
                 A Voice for Financial Literacy in Kenya
               </h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed whitespace-pre-line mb-12">
-                {aboutPage?.bodyContent || (
+              <div className="mb-12 md:columns-2 md:gap-8 [&>p]:mb-4 [&>p]:break-inside-avoid text-muted-foreground leading-relaxed">
+                {aboutPage?.bodyContent ? (
+                  aboutPage.bodyContent.split('\n\n').map((paragraph, i) => (
+                    <p key={i} className="whitespace-pre-line">{paragraph}</p>
+                  ))
+                ) : (
                   <>
                     <p>
                       Jamuhuri Gachoroba is one of Kenya's foremost voices on financial market education.
