@@ -1,9 +1,0 @@
-{
-  "name": "@workspace/api",
-  "version": "0.0.1",
-  "private": true,
-  "dependencies": {
-    "@supabase/supabase-js": "^2.104.0",
-    "@types/node": "^25.0.0"
-  }
-}
