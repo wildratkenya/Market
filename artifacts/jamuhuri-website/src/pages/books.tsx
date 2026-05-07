@@ -335,7 +335,7 @@ export default function Books() {
 
       {/* Order Modal */}
       <Dialog open={isOrderModalOpen} onOpenChange={setIsOrderModalOpen}>
-        <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden flex flex-col max-h-[90vh]">
+        <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden max-h-[90vh] flex flex-col">
           <div className="bg-secondary p-6 text-white shrink-0">
             <DialogHeader>
               <DialogTitle className="text-2xl font-serif">Order Details</DialogTitle>
@@ -345,8 +345,9 @@ export default function Books() {
             </DialogHeader>
           </div>
           
-          <div className="p-6 overflow-y-auto flex-1">
-            <Form {...form}>
+          <div className="flex flex-1 overflow-hidden">
+            <div className="flex-1 p-6 overflow-y-auto">
+              <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -515,6 +516,16 @@ export default function Books() {
                 </div>
               </form>
             </Form>
+            </div>
+            {selectedBook?.coverImage && (
+              <div className="hidden md:block w-72 shrink-0 bg-muted border-l border-border/50 p-6 flex items-center justify-center">
+                <img
+                  src={selectedBook.coverImage}
+                  alt={selectedBook.title}
+                  className="w-full rounded-xl shadow-lg object-cover aspect-[3/4]"
+                />
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
