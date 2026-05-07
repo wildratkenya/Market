@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Users, MessageSquare, RefreshCw, ChevronDown, ChevronUp,
   Package, Monitor, Check, Clock, BookOpen, Plus, Pencil, Trash2,
-  AlertCircle, Truck, CheckCircle2, XCircle, X, LogOut, ShieldCheck, Layout
+  AlertCircle, Truck, CheckCircle2, XCircle, X, LogOut, ShieldCheck, Layout,
+  FileText
 } from "lucide-react";
 import { useAdminAuth } from "@/contexts/admin-auth-context";
 import {
@@ -642,7 +643,7 @@ function MessageRow({ msg }: { msg: { id: number; type: string; subject: string;
 }
 
 export default function Admin() {
-  const [tab, setTab] = useState<"books" | "orders" | "subscribers" | "messages" | "admins" | "pages">("orders");
+  const [tab, setTab] = useState<"books" | "orders" | "subscribers" | "messages" | "admins" | "pages" | "blogs">("orders");
   const qc = useQueryClient();
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAdminAuth();
   const [, setLocation] = useLocation();
@@ -660,6 +661,7 @@ export default function Admin() {
   const allTabs = [
     { id: "orders" as const,      label: "Orders",      icon: ShoppingBag, count: orders?.length,      alert: pendingOrders > 0 ? pendingOrders : undefined },
     { id: "books" as const,       label: "Books",       icon: BookOpen,    count: books?.length },
+    { id: "blogs" as const,       label: "Blog Posts",  icon: FileText,    count: undefined },
     { id: "subscribers" as const, label: "Subscribers", icon: Users,       count: subscribers?.length },
     { id: "messages" as const,    label: "Messages",    icon: MessageSquare, count: messages?.length },
     { id: "admins" as const,      label: "Manage Admins", icon: ShieldCheck,   count: undefined },

@@ -18,7 +18,6 @@ function PagesTab() {
     { id: "home", label: "Home Page" },
     { id: "about", label: "About Page" },
     { id: "contact", label: "Contact Page" },
-    { id: "markets", label: "Markets Page" },
     { id: "footer", label: "Footer" },
   ];
 
