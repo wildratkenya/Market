@@ -415,10 +415,21 @@ export default async function handler(req, res) {
     // ========== MESSAGES ==========
     if (path === '/api/messages' && method === 'POST') {
       const body = await readBody(req);
+      // Spam checks
+      const metaMatch = (body.body || '').match(/_ts:(\d+)_bf:(.*)$/);
+      const elapsed = metaMatch ? parseInt(metaMatch[1]) : 0;
+      const botField = metaMatch ? metaMatch[2] : '';
+      const cleanBody = (body.body || '').replace(/\n?_ts:\d+_bf:.*$/, '');
+      if (botField) {
+        return res.status(400).json({ error: 'Spam detected' });
+      }
+      if (elapsed < 3000) {
+        return res.status(400).json({ error: 'Spam detected' });
+      }
       const result = await supabaseInsert('messages', {
         type: body.type || 'contact',
         subject: body.subject || null,
-        body: body.body,
+        body: cleanBody,
         sender_email: body.senderEmail || null,
       });
       return res.status(201).json(snakeToCamel(result));

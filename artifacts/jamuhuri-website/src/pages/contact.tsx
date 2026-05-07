@@ -1,7 +1,7 @@
 ﻿import { usePage } from "@/hooks/use-page";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { Mail, MessageSquare, CheckCircle, Loader2, ArrowRight } from "lucide-react";
+import { useState, useRef } from "react";
+import { Mail, MessageSquare, CheckCircle, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,9 +19,11 @@ const stagger = {
 
 export default function Contact() {
   const { data: contactPage } = usePage("contact");
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "", botField: "" });
+  const [verified, setVerified] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const formStartRef = useRef(Date.now());
 
   const { mutate: sendMessage, isPending } = useCreateMessage({
     mutation: {
@@ -38,11 +40,16 @@ export default function Contact() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.subject || !form.message) return;
+    if (!verified) {
+      setError("Please verify you are not a robot.");
+      return;
+    }
+    const elapsed = Date.now() - formStartRef.current;
     sendMessage({
       data: {
         type: "contact",
         subject: `[Contact] ${form.subject} — from ${form.name}`,
-        body: `Name: ${form.name}\nEmail: ${form.email}\n\nMessage:\n${form.message}`,
+        body: `Name: ${form.name}\nEmail: ${form.email}\n\nMessage:\n${form.message}\n\n_ts:${elapsed}_bf:${form.botField}`,
         senderEmail: form.email,
       },
     });
@@ -132,7 +139,7 @@ export default function Contact() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   onSubmit={handleSubmit}
-                  className="bg-card border border-border rounded-2xl p-8 space-y-5 shadow-sm"
+                  className="bg-card border border-border rounded-2xl p-8 space-y-5 shadow-sm relative"
                 >
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -163,9 +170,28 @@ export default function Contact() {
                   {error && (
                     <p className="text-sm text-red-500 bg-red-50 rounded-lg px-4 py-3 border border-red-100">{error}</p>
                   )}
+
+                  {/* Honeypot — hidden from humans */}
+                  <div className="absolute opacity-0 pointer-events-none" aria-hidden="true">
+                    <Label>Website</Label>
+                    <Input name="botField" value={form.botField} onChange={(e) => setForm({ ...form, botField: e.target.value })} tabIndex={-1} autoComplete="off" />
+                  </div>
+
+                  {/* I am not a robot */}
+                  <label className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={verified}
+                      onChange={(e) => setVerified(e.target.checked)}
+                      className="w-5 h-5 rounded border-gray-300 text-[#c9a227] focus:ring-[#c9a227]"
+                    />
+                    <ShieldCheck className="h-5 w-5 text-green-600 shrink-0" />
+                    <span className="text-sm text-muted-foreground">I am not a robot</span>
+                  </label>
+
                   <Button
                     type="submit"
-                    disabled={isPending || !form.name || !form.email || !form.subject || !form.message}
+                    disabled={isPending || !form.name || !form.email || !form.subject || !form.message || !verified}
                     className="w-full bg-[#c9a227] text-[#0f2337] hover:bg-[#b8911e] font-semibold py-6 text-base"
                   >
                     {isPending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <>Send Message <ArrowRight className="ml-2 h-4 w-4" /></>}
