@@ -31,7 +31,7 @@ async function parseRSS(limit) {
       const m = content.match(regex);
       return m ? (m[1] || m[2] || '').trim() : '';
     };
-    const durationSeconds = parseInt(getTag('itunes:duration')) || 0;
+    const guidRaw = getTag('guid').replace('Buzzsprout-', ''); const guidNum = guidRaw || ''; const slug = getTag('title').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); const durationSeconds = parseInt(getTag('itunes:duration')) || 0;
     const enclosure = content.match(/<enclosure[^>]+url="([^"]+)"/);
     items.push({
       id: items.length + 1,
@@ -40,7 +40,7 @@ async function parseRSS(limit) {
       publishedAt: getTag('pubDate'),
       duration: parseDuration(durationSeconds),
       audioUrl: enclosure ? enclosure[1] : '',
-      buzzsproutUrl: BUZZSPROUT_BASE,
+      buzzsproutUrl: BUZZSPROUT_BASE + '/episodes/' + guidNum + '-' + slug,
     });
   }
   return items;
@@ -215,7 +215,7 @@ export default async function handler(req, res) {
 
     if (path === '/api/podcasts/latest') {
       try {
-        const items = await parseRSS(3);
+        const items = await parseRSS(5);
         return res.status(200).json(items);
       } catch (err) {
         console.error('RSS parse error:', err);

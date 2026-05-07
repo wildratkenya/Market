@@ -26,7 +26,7 @@ async function parseRSS(limit = 100): Promise<any[]> {
       const m = content.match(regex);
       return m ? (m[1] || m[2] || "").trim() : "";
     };
-    const durationSeconds = parseInt(getTag("itunes:duration")) || 0;
+    const guidRaw = getTag("guid").replace("Buzzsprout-", ""); const guidNum = guidRaw || ""; const slug = getTag("title").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); const durationSeconds = parseInt(getTag("itunes:duration")) || 0;
     const enclosure = content.match(/<enclosure[^>]+url="([^"]+)"/);
     items.push({
       id: items.length + 1,
@@ -35,7 +35,7 @@ async function parseRSS(limit = 100): Promise<any[]> {
       publishedAt: getTag("pubDate"),
       duration: parseDuration(durationSeconds),
       audioUrl: enclosure ? enclosure[1] : "",
-      buzzsproutUrl: BUZZSPROUT_BASE,
+      buzzsproutUrl: BUZZSPROUT_BASE + "/episodes/" + guidNum + "-" + slug,
     });
   }
   return items;
@@ -61,13 +61,13 @@ router.get("/podcasts", async (_req, res) => {
 
 router.get("/podcasts/latest", async (_req, res) => {
   try {
-    const items = await parseRSS(3);
+    const items = await parseRSS(5);
     res.json(items);
   } catch (err) {
     console.error("RSS parse error:", err);
     try {
       const { supabase } = await import("../lib/supabase");
-      const { data } = await supabase.from("podcasts").select("*").order("published_at", { ascending: false }).limit(3);
+      const { data } = await supabase.from("podcasts").select("*").order("published_at", { ascending: false }).limit(5);
       res.json(data || []);
     } catch {
       res.status(500).json({ error: "Failed to fetch latest podcasts" });
@@ -76,3 +76,4 @@ router.get("/podcasts/latest", async (_req, res) => {
 });
 
 export default router;
+

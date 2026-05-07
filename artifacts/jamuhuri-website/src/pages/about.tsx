@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useState } from "react";
-import { ArrowRight, Mic, BookOpen, Users, ExternalLink, CheckCircle, Loader2, Target, Lightbulb } from "lucide-react";
+import { ArrowRight, Mic, BookOpen, Users, ExternalLink, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,6 +21,7 @@ const stagger = {
 
 export default function About() {
   const { data: aboutPage } = usePage("about");
+  const bioContent = aboutPage?.bodyContent ?? "";
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -29,20 +30,6 @@ export default function About() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const bioContent = (() => {
-    const raw = aboutPage?.bodyContent;
-    if (!raw) return { bio: "", vision: "", mission: "" };
-    const visionMatch = raw.match(/VISION:\s*([\s\S]*?)(?=MISSION:|$)/);
-    const missionMatch = raw.match(/MISSION:\s*([\s\S]*?)$/);
-    const vision = visionMatch ? visionMatch[1].trim() : "";
-    const mission = missionMatch ? missionMatch[1].trim() : "";
-    let bio = raw.replace(/BELIEF:[\s\S]*?(?=VISION:|$)/, "");
-    bio = bio.replace(/VISION:[\s\S]*?(?=MISSION:|$)/, "");
-    bio = bio.replace(/MISSION:[\s\S]*$/, "");
-    bio = bio.replace(/\n{2,}/g, "\n\n").trim();
-    return { bio, vision, mission };
-  })();
 
   const { mutate: subscribe, isPending } = useCreateSubscriber({
     mutation: {
@@ -103,7 +90,7 @@ export default function About() {
             <motion.p
               variants={fadeUp}
               className="text-white/70 text-lg md:text-xl max-w-2xl leading-relaxed">
-              {aboutPage?.heroDescription || "Financial educator, author, and podcast host \u2014 on a mission to make Kenya's money markets accessible to every Kenyan."}
+              {aboutPage?.heroDescription || "Financial educator, author, and podcast host — on a mission to make Kenya's money markets accessible to every Kenyan."}
 
             </motion.p>
           </motion.div>
@@ -132,33 +119,6 @@ export default function About() {
                   <p className="text-[#c9a227] text-sm">Financial Expert & Author</p>
                 </div>
               </div>
-
-              {(bioContent.vision || bioContent.mission) && (
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                  {bioContent.vision && (
-                    <div className="p-4 rounded-xl border border-border bg-card">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-[#c9a227]/15 flex items-center justify-center shrink-0">
-                          <Target className="h-4 w-4 text-[#c9a227]" />
-                        </div>
-                        <h3 className="text-sm font-bold text-foreground">Vision</h3>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{bioContent.vision}</p>
-                    </div>
-                  )}
-                  {bioContent.mission && (
-                    <div className="p-4 rounded-xl border border-border bg-card">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-[#c9a227]/15 flex items-center justify-center shrink-0">
-                          <Lightbulb className="h-4 w-4 text-[#c9a227]" />
-                        </div>
-                        <h3 className="text-sm font-bold text-foreground">Mission</h3>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{bioContent.mission}</p>
-                    </div>
-                  )}
-                </div>
-              )}
             </motion.div>
 
             <motion.div
@@ -170,8 +130,8 @@ export default function About() {
                 A Voice for Financial Literacy in Kenya
               </h2>
               <div className="mb-12 md:columns-2 md:gap-8 [&>p]:mb-4 [&>p]:break-inside-avoid text-muted-foreground leading-relaxed">
-                {bioContent.bio ? (
-                  bioContent.bio.split('\n\n').map((paragraph, i) => (
+                {bioContent ? (
+                  bioContent.split('\n\n').map((paragraph, i) => (
                     <p key={i} className="whitespace-pre-line">{paragraph}</p>
                   ))
                 ) : (
@@ -407,4 +367,3 @@ export default function About() {
     </div>
   );
 }
-

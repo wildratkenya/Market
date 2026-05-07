@@ -571,7 +571,7 @@ function OrdersTab() {
                 <div className="flex flex-wrap items-center gap-2 md:shrink-0 md:flex-col md:items-end">
                   <div className="flex items-center gap-2 flex-wrap justify-end">
                     <span className={`text-xs font-semibold px-2 py-1 rounded-full ${order.orderType === "hardcopy" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>
-                      {order.orderType === "hardcopy" ? "Hard Copy" : "Digital"}
+                      {order.orderType === "hardcopy" ? "Hard Copy" : "E-Book"}
                     </span>
                     <OrderStatusBadge status={order.status} />
                   </div>
@@ -899,6 +899,7 @@ export default function Admin() {
     </div>
   );
 }
+
 
 
 

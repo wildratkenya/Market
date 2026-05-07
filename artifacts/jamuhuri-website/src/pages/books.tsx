@@ -196,9 +196,7 @@ export default function Books() {
                         </Badge>
                       )}
                       {(book.type === 'ebook' || book.type === 'both') && (
-                        <Badge className="bg-blue-100 text-blue-800 border-none shadow-sm font-semibold text-xs">
-                          Digital
-                        </Badge>
+                        <Badge className="bg-blue-100 text-blue-800 border-none shadow-sm font-semibold text-xs">E-Book</Badge>
                       )}
                     </div>
                   </div>
@@ -277,10 +275,10 @@ export default function Books() {
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="outline">{previewBook.category || 'Finance'}</Badge>
                   {previewBook.type === 'hardcopy' && <Badge className="bg-orange-100 text-orange-800 border-none">Hard Copy</Badge>}
-                  {previewBook.type === 'ebook' && <Badge className="bg-blue-100 text-blue-800 border-none">Digital</Badge>}
+                  {previewBook.type === 'ebook' && <Badge className="bg-blue-100 text-blue-800 border-none">E-Book</Badge>}
                   {previewBook.type === 'both' && (<>
                     <Badge className="bg-orange-100 text-orange-800 border-none">Hard Copy</Badge>
-                    <Badge className="bg-blue-100 text-blue-800 border-none">Digital</Badge>
+                    <Badge className="bg-blue-100 text-blue-800 border-none">E-Book</Badge>
                   </>)}
                 </div>
                 <div>
@@ -298,7 +296,7 @@ export default function Books() {
                   {previewBook.ebookPrice && (
                     <div className="text-center p-4 bg-background rounded-lg border">
                       <Monitor className="h-6 w-6 mx-auto mb-2 text-blue-600" />
-                      <p className="text-xs text-muted-foreground mb-1">Digital Copy</p>
+                      <p className="text-xs text-muted-foreground mb-1">E-Book</p>
                       <p className="font-mono text-lg font-bold">{previewBook.currency} {previewBook.ebookPrice.toLocaleString()}</p>
                     </div>
                   )}
@@ -324,7 +322,7 @@ export default function Books() {
                     variant="outline"
                     className="w-full py-6 border-blue-300 text-blue-700 hover:bg-blue-50 font-semibold gap-2"
                   >
-                    <Monitor className="h-5 w-5" /> Order Digital Copy
+                    <Monitor className="h-5 w-5" /> Order E-Book
                   </Button>
                 )}
               </div>
@@ -383,7 +381,7 @@ export default function Books() {
                   <div>
                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Format</p>
                     <p className="font-bold text-foreground">
-                      {watchOrderType === "hardcopy" ? "Hard Copy (Physical Delivery)" : "Digital Copy (Sent by Email)"}
+                      {watchOrderType === "hardcopy" ? "Hard Copy (Physical Delivery)" : "E-Book (Sent by Email)"}
                     </p>
                   </div>
                 </div>
@@ -529,6 +527,42 @@ export default function Books() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* How to Order */}
+      <section className="py-20 bg-secondary text-secondary-foreground text-center">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <h2 className="text-3xl font-serif font-bold text-white mb-8">How to Order Books</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+            <div className="bg-white/5 p-8 rounded-2xl border border-white/10 backdrop-blur-sm">
+              <h3 className="text-xl font-bold text-primary mb-4">Hardcopy Editions</h3>
+              <ul className="space-y-3 text-white/80">
+                <li className="flex items-start gap-3">
+                  <span className="text-primary font-bold">1.</span> Select your book and fill out the delivery details.
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-primary font-bold">2.</span> Pay via M-PESA to Till No: 3016590. Shipping charges apply.
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-primary font-bold">3.</span> Shipping charges are extra and depend on courier rates to your location.
+                </li>
+              </ul>
+            </div>
+            <div className="bg-white/5 p-8 rounded-2xl border border-white/10 backdrop-blur-sm">
+              <h3 className="text-xl font-bold text-primary mb-4">E-Book Editions</h3>
+              <ul className="space-y-3 text-white/80">
+                <li className="flex items-start gap-3">
+                  <span className="text-primary font-bold">1.</span> Select the e-book version and provide your email.
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-primary font-bold">2.</span> Pay via M-PESA to Till No: 3016590.
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-primary font-bold">3.</span> Send confirmation to intro2fin.markets@gmail.com and receive your E-Book instantly.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
