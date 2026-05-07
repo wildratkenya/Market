@@ -26,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import PagesTab from "./admin-pages-tab";
+import BlogsTab from "./admin-blogs-tab";
 import { useToast } from "@/hooks/use-toast";
 
 const ORDER_STATUSES = ["pending", "confirmed", "shipped", "delivered", "cancelled"] as const;
@@ -662,7 +663,8 @@ export default function Admin() {
     { id: "subscribers" as const, label: "Subscribers", icon: Users,       count: subscribers?.length },
     { id: "messages" as const,    label: "Messages",    icon: MessageSquare, count: messages?.length },
     { id: "admins" as const,      label: "Manage Admins", icon: ShieldCheck,   count: undefined },
-    { id: "pages" as const,       label: "Site Pages",    icon: Layout,            count: undefined },
+    { id: "pages" as const,       label: "Site Pages",    icon: Layout,
+  FileText,            count: undefined },
   ];
   const tabs = isReadonly ? allTabs.filter((t) => t.id === "orders") : (user?.role === 'super_admin' ? allTabs : allTabs.filter(t => t.id !== 'admins'));
 
@@ -882,6 +884,7 @@ export default function Admin() {
             </motion.div>
           )}
           {tab === "pages" && <PagesTab />}
+        {tab === "blogs" && <BlogsTab />}
           {tab === "admins" && (
             <motion.div key="admins" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <div className="bg-card border border-border rounded-xl overflow-hidden p-8 text-center">

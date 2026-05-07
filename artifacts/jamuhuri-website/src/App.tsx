@@ -7,8 +7,9 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import About from "@/pages/about";
 import Books from "@/pages/books";
-import Markets from "@/pages/markets";
 import Contact from "@/pages/contact";
+import Blogs from "@/pages/blogs";
+import Blog from "@/pages/blog";
 import Admin from "@/pages/admin";
 import AdminLogin from "@/pages/admin-login";
 import { Navbar } from "@/components/layout/Navbar";
@@ -58,7 +59,8 @@ function Router() {
       <Route path="/" component={() => <PublicLayout><Home /></PublicLayout>} />
       <Route path="/about" component={() => <PublicLayout><About /></PublicLayout>} />
       <Route path="/books" component={() => <PublicLayout><Books /></PublicLayout>} />
-      <Route path="/markets" component={() => <PublicLayout><Markets /></PublicLayout>} />
+      <Route path="/blogs" component={() => <PublicLayout><Blogs /></PublicLayout>} />
+      <Route path="/blogs/:slug" component={() => <PublicLayout><Blog /></PublicLayout>} />
       <Route path="/contact" component={() => <PublicLayout><Contact /></PublicLayout>} />
       <Route component={() => <PublicLayout><NotFound /></PublicLayout>} />
     </Switch>

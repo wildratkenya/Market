@@ -1,0 +1,32 @@
+Homepage
+>Hero make it about the podcast move the latest episodes there
+>vision/mission/believe just below the hero
+>then the latest podcasts remove since they will be in the Hero intro
+>How to Order Books move it to the books page
+>add follow
+
+menu 2 About
+
+>weekly podcast change to podcasts say 200+
+>remove subscribers
+
+menu 3 books
+>Change digital copy to ebooks
+>change order of books...understanding to be the first one
+>books introduction to money markets....same on the title
+>the podcast use the section as guide/move to the Hero section on main page
+>Move podcast subscription to the main page last section
+
+
+Remove Markets page, and podcasts menu item.
+
+Menu 5 (new)
+Blogs page
+
+Menu 6 contacts
+>add reCAPTCHA/am not a robot and send messages to email too.
+
+/admin
+
+Orders 
+to Shows Orders received and orders delivered

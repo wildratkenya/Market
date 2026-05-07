@@ -1,17 +1,21 @@
-﻿import { Link } from "wouter";
+import { useState } from "react";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Headphones, Target, Lightbulb, Users } from "lucide-react";
+import { ArrowRight, BookOpen, Headphones, Target, Lightbulb, Users, Package, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListBooks, getListBooksQueryKey, useGetLatestPodcasts, getGetLatestPodcastsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import bookCoverImg from "@assets/An_Introduction_to_Financial_Markets_1775134561365.png";
 import podcastImg from "@assets/The_Market_Color_Podcast_1775135182993.jpg";
+import type { Book } from "@workspace/api-client-react";
 
 export default function Home() {
   const { data: books } = useListBooks({ query: { queryKey: getListBooksQueryKey() } });
   const { data: podcasts } = useGetLatestPodcasts({ query: { queryKey: getGetLatestPodcastsQueryKey() } });
   const latestBooks = books ? [...books].reverse().slice(0, 3) : undefined;
+  const [previewBook, setPreviewBook] = useState<Book | null>(null);
 
   return (
     <div className="w-full">
@@ -153,13 +157,13 @@ export default function Home() {
             </Button>
           </div>
 
-          <div className={`grid gap-6 max-w-5xl mx-auto ${
+          <div className={`` + "grid gap-6 max-w-5xl mx-auto " + (
             !latestBooks || latestBooks.length === 1
               ? "grid-cols-1 max-w-xs mx-auto"
               : latestBooks.length === 2
               ? "grid-cols-1 md:grid-cols-2 max-w-3xl"
               : "grid-cols-1 md:grid-cols-3"
-          }`}>
+          )}>
             {!latestBooks ? (
               [0, 1, 2, 3, 4].map((i) => (
                 <div key={i} className="h-[320px] bg-muted rounded-xl animate-pulse" />
@@ -216,11 +220,20 @@ export default function Home() {
                               : "Contact for price"}
                           </span>
                         </div>
-                        <Button asChild className="w-full bg-[#0f2337] hover:bg-[#0f2337]/90 text-white font-semibold gap-2 text-xs h-9">
-                          <Link href="/books">
-                            <BookOpen className="h-3.5 w-3.5" /> View & Order
-                          </Link>
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => setPreviewBook(book)}
+                            variant="outline"
+                            className="flex-1 border-primary/30 text-primary hover:bg-primary/5 font-semibold gap-1 text-xs h-9"
+                          >
+                            <BookOpen className="h-3.5 w-3.5" /> More Details
+                          </Button>
+                          <Button asChild className="flex-1 bg-[#0f2337] hover:bg-[#0f2337]/90 text-white font-semibold gap-1 text-xs h-9">
+                            <Link href={`/books?bookId=${book.id}`}>
+                              <BookOpen className="h-3.5 w-3.5" /> Order
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -236,17 +249,87 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Book Preview Dialog */}
+      <Dialog open={!!previewBook} onOpenChange={(open) => !open && setPreviewBook(null)}>
+        <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden">
+          {previewBook && (
+            <>
+              <div className="bg-secondary p-6 text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-serif">{previewBook.title}</DialogTitle>
+                  <DialogDescription className="text-white/70">
+                    {previewBook.subtitle}
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+              <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                <div className="flex gap-6">
+                  <div className="w-32 shrink-0 bg-muted rounded-lg p-2 flex items-center justify-center">
+                    <img
+                      src={previewBook.coverImage || bookCoverImg}
+                      alt={previewBook.title}
+                      className="w-full rounded-md object-contain"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <Badge variant="outline">{previewBook.category || 'Finance'}</Badge>
+                      {previewBook.type === 'hardcopy' && <Badge className="bg-orange-100 text-orange-800 border-none">Hard Copy</Badge>}
+                      {previewBook.type === 'ebook' && <Badge className="bg-blue-100 text-blue-800 border-none">E-Book</Badge>}
+                      {previewBook.type === 'both' && (<>
+                        <Badge className="bg-orange-100 text-orange-800 border-none">Hard Copy</Badge>
+                        <Badge className="bg-blue-100 text-blue-800 border-none">E-Book</Badge>
+                      </>)}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-foreground mb-2">About this Book</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">{previewBook.description}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                  {previewBook.hardcopyPrice && (
+                    <div className="text-center p-4 bg-background rounded-lg border">
+                      <Package className="h-6 w-6 mx-auto mb-2 text-primary" />
+                      <p className="text-xs text-muted-foreground mb-1">Hard Copy</p>
+                      <p className="font-mono text-lg font-bold">{previewBook.currency} {previewBook.hardcopyPrice.toLocaleString()}</p>
+                    </div>
+                  )}
+                  {previewBook.ebookPrice && (
+                    <div className="text-center p-4 bg-background rounded-lg border">
+                      <Monitor className="h-6 w-6 mx-auto mb-2 text-blue-600" />
+                      <p className="text-xs text-muted-foreground mb-1">E-Book</p>
+                      <p className="font-mono text-lg font-bold">{previewBook.currency} {previewBook.ebookPrice.toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
+                  <p className="text-sm font-medium">
+                    <strong className="text-primary">Payment:</strong> Till No: <strong>3016590</strong>. For all communication email: intro2fin.markets@gmail.com
+                  </p>
+                </div>
+              </div>
+              <div className="p-6 border-t space-y-3 bg-background">
+                {(previewBook.type === 'hardcopy' || previewBook.type === 'both') && (
+                  <Button asChild className="w-full py-6 bg-[#0f2337] hover:bg-[#0f2337]/90 text-white font-semibold gap-2">
+                    <Link href={`/books?bookId=${previewBook.id}`}>
+                      <Package className="h-5 w-5" /> Order Hard Copy
+                    </Link>
+                  </Button>
+                )}
+                {(previewBook.type === 'ebook' || previewBook.type === 'both') && (
+                  <Button asChild variant="outline" className="w-full py-6 border-blue-300 text-blue-700 hover:bg-blue-50 font-semibold gap-2">
+                    <Link href={`/books?bookId=${previewBook.id}`}>
+                      <Monitor className="h-5 w-5" /> Order E-Book
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-

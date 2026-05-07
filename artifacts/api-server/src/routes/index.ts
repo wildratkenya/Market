@@ -9,6 +9,7 @@ import statsRouter from "./stats";
 import adminRouter from "./admin";
 import uploadRouter from "./upload";
 import pagesRouter from "./pages";
+import blogsRouter from "./blogs";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(subscribersRouter);
 router.use(messagesRouter);
 router.use(statsRouter);
 router.use(pagesRouter);
+router.use(blogsRouter);
 
 export default router;

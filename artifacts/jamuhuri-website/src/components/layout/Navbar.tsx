@@ -12,7 +12,7 @@ export function Navbar() {
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
     { href: "/books", label: "Books" },
-    { href: "/markets", label: "Markets" },
+    { href: "/blogs", label: "Market Blogs" },
     { href: "/contact", label: "Contact" },
   ];
 
@@ -40,14 +40,6 @@ export function Navbar() {
               )}
             </Link>
           ))}
-          <a 
-            href="https://marketcolourpodcast.buzzsprout.com" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            Podcast
-          </a>
           <Button asChild variant="default" className="font-semibold">
             <Link href="/books">Order Books</Link>
           </Button>
@@ -78,14 +70,6 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <a 
-            href="https://marketcolourpodcast.buzzsprout.com" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="block text-lg font-medium py-2 border-b border-border/20 text-foreground"
-          >
-            Podcast
-          </a>
         </div>
       )}
     </header>

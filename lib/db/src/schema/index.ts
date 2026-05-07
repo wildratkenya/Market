@@ -5,3 +5,4 @@ export * from "./subscribers";
 export * from "./messages";
 export * from "./admin-users";
 export * from "./site-pages";
+export * from "./blogs";

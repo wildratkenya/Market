@@ -6,9 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface StatsSummary {
-  totalBooks: number;
-  totalOrders: number;
-  totalSubscribers: number;
-  totalPodcasts: number;
-}
+export type DeleteBlog200 = {
+  success?: boolean;
+};

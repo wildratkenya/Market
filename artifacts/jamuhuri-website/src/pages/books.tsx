@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, BookOpen, Filter, Search, Package, Monitor, Minus, Plus } from "lucide-react";
 import bookCoverImg from "@assets/An_Introduction_to_Financial_Markets_1775134561365.png";
@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import type { Book } from "@workspace/api-client-react";
+import { useSearch } from "wouter";
 
 const orderSchema = z.object({
   customerName: z.string().min(2, "Name is required"),
@@ -35,6 +36,7 @@ const orderSchema = z.object({
 });
 
 export default function Books() {
+  const search = useSearch();
   const { data: books, isLoading } = useListBooks({ query: { queryKey: getListBooksQueryKey() } });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
@@ -57,6 +59,27 @@ export default function Books() {
     },
   });
 
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const bookIdParam = params.get("bookId");
+    if (bookIdParam && books) {
+      const book = books.find((b: Book) => b.id === Number(bookIdParam));
+      if (book) {
+        setSelectedBook(book);
+        form.reset({
+          customerName: "",
+          customerEmail: "",
+          orderType: book.type === "ebook" ? "ebook" : "hardcopy",
+          customerPhone: "",
+          deliveryAddress: "",
+          deliveryCity: "",
+          quantity: 1,
+        });
+        setIsOrderModalOpen(true);
+      }
+    }
+  }, [books]);
+
   const filteredBooks = books?.filter(book => 
     book.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     book.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -68,6 +91,20 @@ export default function Books() {
       customerName: "",
       customerEmail: "",
       orderType: type,
+      customerPhone: "",
+      deliveryAddress: "",
+      deliveryCity: "",
+      quantity: 1,
+    });
+    setIsOrderModalOpen(true);
+  };
+
+  const handleOpenOrder = (book: Book) => {
+    setSelectedBook(book);
+    form.reset({
+      customerName: "",
+      customerEmail: "",
+      orderType: book.type === "ebook" ? "ebook" : "hardcopy",
       customerPhone: "",
       deliveryAddress: "",
       deliveryCity: "",
@@ -272,18 +309,29 @@ export default function Books() {
                 </DialogHeader>
               </div>
               <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">{previewBook.category || 'Finance'}</Badge>
-                  {previewBook.type === 'hardcopy' && <Badge className="bg-orange-100 text-orange-800 border-none">Hard Copy</Badge>}
-                  {previewBook.type === 'ebook' && <Badge className="bg-blue-100 text-blue-800 border-none">E-Book</Badge>}
-                  {previewBook.type === 'both' && (<>
-                    <Badge className="bg-orange-100 text-orange-800 border-none">Hard Copy</Badge>
-                    <Badge className="bg-blue-100 text-blue-800 border-none">E-Book</Badge>
-                  </>)}
-                </div>
-                <div>
-                  <h4 className="font-bold text-foreground mb-2">About this Book</h4>
-                  <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">{previewBook.description}</p>
+                <div className="flex gap-6">
+                  <div className="w-32 shrink-0 bg-muted rounded-lg p-2 flex items-center justify-center">
+                    <img
+                      src={previewBook.coverImage || bookCoverImg}
+                      alt={previewBook.title}
+                      className="w-full rounded-md object-contain"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <Badge variant="outline">{previewBook.category || 'Finance'}</Badge>
+                      {previewBook.type === 'hardcopy' && <Badge className="bg-orange-100 text-orange-800 border-none">Hard Copy</Badge>}
+                      {previewBook.type === 'ebook' && <Badge className="bg-blue-100 text-blue-800 border-none">E-Book</Badge>}
+                      {previewBook.type === 'both' && (<>
+                        <Badge className="bg-orange-100 text-orange-800 border-none">Hard Copy</Badge>
+                        <Badge className="bg-blue-100 text-blue-800 border-none">E-Book</Badge>
+                      </>)}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-foreground mb-2">About this Book</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">{previewBook.description}</p>
+                    </div>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
                   {previewBook.hardcopyPrice && (
@@ -331,7 +379,7 @@ export default function Books() {
         </DialogContent>
       </Dialog>
 
-      {/* Order Modal */}
+            {/* Order Modal */}
       <Dialog open={isOrderModalOpen} onOpenChange={setIsOrderModalOpen}>
         <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden max-h-[90vh] flex flex-col">
           <div className="bg-secondary p-6 text-white shrink-0">

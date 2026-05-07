@@ -486,9 +486,160 @@ export async function upsertPage(name: string, data: any) {
   return created;
 }
 
+export async function getBlogs() {
+  try {
+    const { blogsTable } = await import("@workspace/db/schema");
+    return await db.select().from(blogsTable).where(eq(blogsTable.published, true)).orderBy(desc(blogsTable.publishedAt));
+  } catch (err) {
+    const { supabase } = await import("./supabase");
+    const { data } = await supabase.from("blogs").select("*").eq("published", true).order("published_at", { ascending: false });
+    return (data || []).map((b: any) => ({
+      id: b.id,
+      title: b.title,
+      slug: b.slug,
+      excerpt: b.excerpt,
+      content: b.content,
+      coverImage: b.cover_image,
+      category: b.category,
+      published: b.published,
+      publishedAt: b.published_at,
+      createdAt: new Date(b.created_at),
+      updatedAt: b.updated_at ? new Date(b.updated_at) : null,
+    }));
+  }
+}
 
+export async function getLatestBlogs(limit = 6) {
+  try {
+    const { blogsTable } = await import("@workspace/db/schema");
+    return await db.select().from(blogsTable).where(eq(blogsTable.published, true)).orderBy(desc(blogsTable.publishedAt)).limit(limit);
+  } catch {
+    const blogs = await getBlogs();
+    return blogs.slice(0, limit);
+  }
+}
 
+export async function getBlog(idOrSlug: string) {
+  try {
+    const { blogsTable } = await import("@workspace/db/schema");
+    const id = Number(idOrSlug);
+    if (Number.isInteger(id) && id > 0) {
+      const [blog] = await db.select().from(blogsTable).where(eq(blogsTable.id, id));
+      return blog || null;
+    }
+    const [blog] = await db.select().from(blogsTable).where(eq(blogsTable.slug, idOrSlug));
+    return blog || null;
+  } catch (err) {
+    const { supabase } = await import("./supabase");
+    const id = Number(idOrSlug);
+    let result;
+    if (Number.isInteger(id) && id > 0) {
+      result = await supabase.from("blogs").select("*").eq("id", id).maybeSingle();
+    } else {
+      result = await supabase.from("blogs").select("*").eq("slug", idOrSlug).maybeSingle();
+    }
+    if (result.error || !result.data) return null;
+    const b = result.data;
+    return {
+      id: b.id,
+      title: b.title,
+      slug: b.slug,
+      excerpt: b.excerpt,
+      content: b.content,
+      coverImage: b.cover_image,
+      category: b.category,
+      published: b.published,
+      publishedAt: new Date(b.published_at),
+      createdAt: new Date(b.created_at),
+      updatedAt: b.updated_at ? new Date(b.updated_at) : null,
+    };
+  }
+}
 
+export async function insertBlog(values: any) {
+  try {
+    const { blogsTable } = await import("@workspace/db/schema");
+    const [blog] = await db.insert(blogsTable).values({
+      ...values,
+      coverImage: values.coverImage ?? null,
+      category: values.category ?? null,
+    }).returning();
+    return blog;
+  } catch (err) {
+    const { supabase } = await import("./supabase");
+    const { data, error } = await supabase.from("blogs").insert({
+      title: values.title,
+      slug: values.slug,
+      excerpt: values.excerpt,
+      content: values.content,
+      cover_image: values.coverImage,
+      category: values.category,
+      published: values.published ?? true,
+    }).select().single();
+    if (error) throw error;
+    return {
+      ...data,
+      coverImage: data.cover_image,
+      publishedAt: new Date(data.published_at),
+      createdAt: new Date(data.created_at),
+    };
+  }
+}
 
+export async function updateBlog(idOrSlug: string, values: any) {
+  try {
+    const { blogsTable } = await import("@workspace/db/schema");
+    const id = Number(idOrSlug);
+    const updateData: any = { ...values, updatedAt: new Date() };
+    if (updateData.coverImage === undefined) delete updateData.coverImage;
+    if (updateData.category === undefined) delete updateData.category;
+    if (updateData.published === undefined) delete updateData.published;
 
+    if (Number.isInteger(id) && id > 0) {
+      const [blog] = await db.update(blogsTable).set(updateData).where(eq(blogsTable.id, id)).returning();
+      return blog;
+    }
+    const [blog] = await db.update(blogsTable).set(updateData).where(eq(blogsTable.slug, idOrSlug)).returning();
+    return blog;
+  } catch (err) {
+    const { supabase } = await import("./supabase");
+    const id = Number(idOrSlug);
+    const updateData: any = { updated_at: new Date() };
+    if (values.title) updateData.title = values.title;
+    if (values.slug) updateData.slug = values.slug;
+    if (values.excerpt) updateData.excerpt = values.excerpt;
+    if (values.content) updateData.content = values.content;
+    if (values.coverImage !== undefined) updateData.cover_image = values.coverImage;
+    if (values.category !== undefined) updateData.category = values.category;
+    if (values.published !== undefined) updateData.published = values.published;
 
+    let result;
+    if (Number.isInteger(id) && id > 0) {
+      result = await supabase.from("blogs").update(updateData).eq("id", id).select().single();
+    } else {
+      result = await supabase.from("blogs").update(updateData).eq("slug", idOrSlug).select().single();
+    }
+    if (result.error) throw result.error;
+    return result.data;
+  }
+}
+
+export async function deleteBlog(idOrSlug: string) {
+  try {
+    const { blogsTable } = await import("@workspace/db/schema");
+    const id = Number(idOrSlug);
+    if (Number.isInteger(id) && id > 0) {
+      await db.delete(blogsTable).where(eq(blogsTable.id, id));
+    } else {
+      await db.delete(blogsTable).where(eq(blogsTable.slug, idOrSlug));
+    }
+  } catch (err) {
+    const { supabase } = await import("./supabase");
+    const id = Number(idOrSlug);
+    if (Number.isInteger(id) && id > 0) {
+      await supabase.from("blogs").delete().eq("id", id);
+    } else {
+      await supabase.from("blogs").delete().eq("slug", idOrSlug);
+    }
+  }
+}
