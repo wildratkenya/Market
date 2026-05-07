@@ -1,0 +1,8 @@
+node_modules
+.git
+dist
+.next
+.cache
+*.log
+.DS_Store
+artifacts/jamuhuri-website/dist
