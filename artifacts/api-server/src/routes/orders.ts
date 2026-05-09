@@ -9,9 +9,49 @@ import { requireAuth, requireEditor } from "../middleware/admin-auth";
 const router: IRouter = Router();
 
 const UpdateStatusSchema = z.object({
-  status: z.enum(["pending", "confirmed", "shipped", "delivered", "cancelled"]),
+  status: z.enum(["received", "delivered"]),
   notes: z.string().nullable().optional(),
 });
+
+async function sendOrderNotification(order: any) {
+  try {
+    const { getSettings } = await import("../lib/data");
+    const settings = await getSettings();
+    const smtpHost = settings.smtp_host;
+    const smtpPort = settings.smtp_port;
+    const smtpUser = settings.smtp_user;
+    const smtpPass = settings.smtp_pass;
+    const notificationEmail = settings.notification_email || "intro2fin.markets@gmail.com";
+    if (!smtpHost || !smtpUser || !smtpPass) return;
+    const nodemailer = await import("nodemailer");
+    const transporter = nodemailer.default.createTransport({
+      host: smtpHost,
+      port: parseInt(smtpPort || "587"),
+      secure: smtpPort === "465",
+      auth: { user: smtpUser, pass: smtpPass },
+    });
+    await transporter.sendMail({
+      from: smtpUser,
+      to: notificationEmail,
+      subject: `New Order: ${order.bookTitle} (${order.orderType})`,
+      html: `
+        <h2>New Order Received</h2>
+        <p><strong>Customer:</strong> ${order.customerName}</p>
+        <p><strong>Email:</strong> ${order.customerEmail}</p>
+        <p><strong>Phone:</strong> ${order.customerPhone || "N/A"}</p>
+        <p><strong>Book:</strong> ${order.bookTitle}</p>
+        <p><strong>Type:</strong> ${order.orderType}</p>
+        <p><strong>Quantity:</strong> ${order.quantity || 1}</p>
+        <p><strong>Total:</strong> ${order.totalAmount ? "KES " + order.totalAmount : "N/A"}</p>
+        <p><strong>Delivery Address:</strong> ${order.deliveryAddress || "N/A"}</p>
+        <p><strong>City:</strong> ${order.deliveryCity || "N/A"}</p>
+        <p><strong>Notes:</strong> ${order.notes || "N/A"}</p>
+      `,
+    });
+  } catch {
+    // Email failure is non-critical; don't throw
+  }
+}
 
 function serializeOrder(o: any) {
   let dateString: string;
@@ -64,8 +104,9 @@ router.post("/orders", async (req, res) => {
       quantity: data.quantity ?? 1,
       totalAmount: data.totalAmount ?? null,
       vatAmount: data.vatAmount ?? null,
-      status: "pending",
+      status: "received",
     });
+    sendOrderNotification(order).catch(() => {});
     res.status(201).json(serializeOrder(order));
   } catch (err: any) {
     console.error("Order creation error:", err);

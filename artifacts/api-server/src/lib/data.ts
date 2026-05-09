@@ -1,5 +1,5 @@
 ﻿import { db } from "@workspace/db";
-import { booksTable, podcastsTable } from "@workspace/db/schema";
+import { booksTable, podcastsTable, settingsTable } from "@workspace/db/schema";
 import { supabase } from "./supabase";
 import { desc } from "drizzle-orm";
 import { logger } from "./logger";
@@ -621,6 +621,56 @@ export async function updateBlog(idOrSlug: string, values: any) {
     }
     if (result.error) throw result.error;
     return result.data;
+  }
+}
+
+export async function getSettings() {
+  try {
+    const rows = await db.select().from(settingsTable);
+    const settings: Record<string, string> = {};
+    for (const row of rows) {
+      settings[row.key] = row.value;
+    }
+    return settings;
+  } catch (err) {
+    logger.warn({ err }, "Drizzle getSettings failed, fallback to REST");
+    const { supabase } = await import("./supabase");
+    const { data } = await supabase.from("settings").select("*");
+    const settings: Record<string, string> = {};
+    for (const row of data || []) {
+      settings[row.key] = row.value;
+    }
+    return settings;
+  }
+}
+
+export async function upsertSetting(key: string, value: string) {
+  try {
+    const [row] = await db
+      .insert(settingsTable)
+      .values({ key, value })
+      .onConflictDoUpdate({ target: settingsTable.key, set: { value, updatedAt: new Date() } })
+      .returning();
+    return row;
+  } catch (err) {
+    logger.warn({ err }, "Drizzle upsertSetting failed, fallback to REST");
+    const { supabase } = await import("./supabase");
+    const { data: existing } = await supabase.from("settings").select("*").eq("key", key).maybeSingle();
+    if (existing) {
+      const { data } = await supabase
+        .from("settings")
+        .update({ value, updated_at: new Date().toISOString() })
+        .eq("key", key)
+        .select()
+        .single();
+      return data;
+    }
+    const { data } = await supabase
+      .from("settings")
+      .insert({ key, value })
+      .select()
+      .single();
+    return data;
   }
 }
 

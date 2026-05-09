@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
 const SUPABASE_URL = 'https://nualwgobuhklnoaeawrz.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -92,6 +93,44 @@ function verifyAdminToken(token) {
     if (!p.exp || p.exp < Math.floor(Date.now() / 1000)) return null;
     return p;
   } catch { return null; }
+}
+
+async function sendOrderEmail(order) {
+  try {
+    const settingsList = await supabaseQuery('settings', 'select=*');
+    const settings = {};
+    for (const row of settingsList) {
+      settings[row.key] = row.value;
+    }
+    const smtpHost = settings.smtp_host;
+    const smtpPort = settings.smtp_port;
+    const smtpUser = settings.smtp_user;
+    const smtpPass = settings.smtp_pass;
+    const notificationEmail = settings.notification_email || 'intro2fin.markets@gmail.com';
+    if (!smtpHost || !smtpUser || !smtpPass) return;
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: parseInt(smtpPort || '587'),
+      secure: smtpPort === '465',
+      auth: { user: smtpUser, pass: smtpPass },
+    });
+    await transporter.sendMail({
+      from: smtpUser,
+      to: notificationEmail,
+      subject: 'New Order: ' + order.bookTitle + ' (' + order.orderType + ')',
+      html: '<h2>New Order Received</h2>'
+        + '<p><strong>Customer:</strong> ' + order.customerName + '</p>'
+        + '<p><strong>Email:</strong> ' + order.customerEmail + '</p>'
+        + '<p><strong>Phone:</strong> ' + (order.customerPhone || 'N/A') + '</p>'
+        + '<p><strong>Book:</strong> ' + order.bookTitle + '</p>'
+        + '<p><strong>Type:</strong> ' + order.orderType + '</p>'
+        + '<p><strong>Quantity:</strong> ' + (order.quantity || 1) + '</p>'
+        + '<p><strong>Total:</strong> ' + (order.totalAmount ? 'KES ' + order.totalAmount : 'N/A') + '</p>'
+        + '<p><strong>Delivery Address:</strong> ' + (order.deliveryAddress || 'N/A') + '</p>'
+        + '<p><strong>City:</strong> ' + (order.deliveryCity || 'N/A') + '</p>'
+        + '<p><strong>Notes:</strong> ' + (order.notes || 'N/A') + '</p>',
+    });
+  } catch {}
 }
 
 async function supabaseQuery(table, query) {
@@ -354,11 +393,12 @@ export default async function handler(req, res) {
         order_type: body.orderType,
         quantity: body.quantity || 1,
         total_amount: body.totalAmount,
-        status: 'pending',
+        status: 'received',
         delivery_address: body.deliveryAddress || null,
         delivery_city: body.deliveryCity || null,
         notes: body.notes || null,
       });
+      sendOrderEmail(result).catch(function() {});
       return res.status(201).json(snakeToCamel(result));
     }
 
@@ -375,10 +415,51 @@ export default async function handler(req, res) {
       const id = parseInt(path.split('/').pop());
       const body = await readBody(req);
       const updates = {};
-      if (body.status) updates.status = body.status;
+      if (body.status) {
+        if (!['received', 'delivered'].includes(body.status)) {
+          return res.status(400).json({ error: 'Status must be "received" or "delivered"' });
+        }
+        updates.status = body.status;
+      }
       if (body.notes !== undefined) updates.notes = body.notes;
       const result = await supabaseUpdate('orders', id, updates);
       return res.json(snakeToCamel(result));
+    }
+
+    // ========== SETTINGS ==========
+    if (path === '/api/settings' && method === 'GET') {
+      const auth = requireAuth(req, res);
+      if (!auth) return;
+      const data = await supabaseQuery('settings', 'select=*');
+      const settings = {};
+      for (const row of data) {
+        settings[row.key] = row.value;
+      }
+      return res.status(200).json(settings);
+    }
+
+    if (path === '/api/settings' && method === 'PUT') {
+      const auth = requireAuth(req, res);
+      if (!auth) return;
+      if (auth.role !== 'super_admin') {
+        return res.status(403).json({ error: 'Forbidden: super_admin only' });
+      }
+      const body = await readBody(req);
+      if (!Array.isArray(body)) {
+        return res.status(400).json({ error: 'Expected array of {key, value}' });
+      }
+      const results = {};
+      for (const entry of body) {
+        if (!entry.key || typeof entry.value !== 'string') continue;
+        const existing = await supabaseQuery('settings', 'key=eq.' + entry.key + '&select=*');
+        if (existing.length > 0) {
+          await supabaseUpdate('settings', existing[0].id, { value: entry.value, updated_at: new Date().toISOString() });
+        } else {
+          await supabaseInsert('settings', { key: entry.key, value: entry.value });
+        }
+        results[entry.key] = entry.value;
+      }
+      return res.status(200).json(results);
     }
 
     // ========== SUBSCRIBERS ==========

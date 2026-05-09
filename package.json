@@ -23,6 +23,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.104.0",
     "@types/node": "catalog:",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "nodemailer": "^8.0.7"
   }
 }

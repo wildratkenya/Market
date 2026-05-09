@@ -14,7 +14,13 @@ import type { Book } from "@workspace/api-client-react";
 export default function Home() {
   const { data: books } = useListBooks({ query: { queryKey: getListBooksQueryKey() } });
   const { data: podcasts } = useGetLatestPodcasts({ query: { queryKey: getGetLatestPodcastsQueryKey() } });
-  const latestBooks = books ? [...books].reverse().slice(0, 3) : undefined;
+  const latestBooks = books
+    ? [...books].sort((a, b) => {
+        if (a.title.includes("Money Markets") && !b.title.includes("Money Markets")) return -1;
+        if (!a.title.includes("Money Markets") && b.title.includes("Money Markets")) return 1;
+        return 0;
+      }).slice(0, 3)
+    : undefined;
   const [previewBook, setPreviewBook] = useState<Book | null>(null);
 
   return (

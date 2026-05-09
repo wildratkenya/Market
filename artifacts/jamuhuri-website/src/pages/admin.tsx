@@ -30,15 +30,12 @@ import PagesTab from "./admin-pages-tab";
 import BlogsTab from "./admin-blogs-tab";
 import { useToast } from "@/hooks/use-toast";
 
-const ORDER_STATUSES = ["pending", "confirmed", "shipped", "delivered", "cancelled"] as const;
+const ORDER_STATUSES = ["received", "delivered"] as const;
 type OrderStatus = typeof ORDER_STATUSES[number];
 
 const STATUS_META: Record<OrderStatus, { label: string; icon: React.ElementType; className: string; bg: string }> = {
-  pending:   { label: "Pending",   icon: Clock,         className: "text-yellow-700 border-yellow-200 bg-yellow-50",  bg: "bg-yellow-500" },
-  confirmed: { label: "Confirmed", icon: CheckCircle2,  className: "text-blue-700 border-blue-200 bg-blue-50",        bg: "bg-blue-500" },
-  shipped:   { label: "In Transit",icon: Truck,         className: "text-purple-700 border-purple-200 bg-purple-50",  bg: "bg-purple-500" },
+  received:  { label: "Received",  icon: Clock,         className: "text-yellow-700 border-yellow-200 bg-yellow-50",  bg: "bg-yellow-500" },
   delivered: { label: "Delivered", icon: Check,         className: "text-green-700 border-green-200 bg-green-50",     bg: "bg-green-500" },
-  cancelled: { label: "Cancelled", icon: XCircle,       className: "text-red-700 border-red-200 bg-red-50",           bg: "bg-red-400" },
 };
 
 function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: number | undefined; color: string }) {
@@ -598,6 +595,141 @@ function OrdersTab() {
   );
 }
 
+function EmailTab() {
+  const { user } = useAdminAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState({
+    smtp_host: "",
+    smtp_port: "587",
+    smtp_user: "",
+    smtp_pass: "",
+    notification_email: "intro2fin.markets@gmail.com",
+  });
+
+  const isSuperAdmin = user?.role === "super_admin";
+
+  useEffect(() => {
+    fetch("/api/settings", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        setSettings({
+          smtp_host: data.smtp_host || "",
+          smtp_port: data.smtp_port || "587",
+          smtp_user: data.smtp_user || "",
+          smtp_pass: data.smtp_pass || "",
+          notification_email: data.notification_email || "intro2fin.markets@gmail.com",
+        });
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const entries = Object.entries(settings).map(([key, value]) => ({ key, value }));
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+        body: JSON.stringify(entries),
+      });
+      if (!res.ok) throw new Error("Save failed");
+      toast({ title: "Settings saved", description: "Email configuration updated." });
+    } catch {
+      toast({ variant: "destructive", title: "Save failed", description: "Could not update settings." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />)}</div>;
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+      <div className="bg-card border border-border rounded-xl p-6 max-w-2xl">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-foreground mb-2">Email Notification Settings</h2>
+          <p className="text-sm text-muted-foreground">
+            Configure Gmail SMTP to receive email notifications when new orders are placed.
+          </p>
+        </div>
+
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6 text-sm">
+          <p className="font-medium text-foreground mb-1">Gmail SMTP Instructions:</p>
+          <ol className="text-muted-foreground space-y-1 list-decimal list-inside">
+            <li>Enable 2-Step Verification on your Google account</li>
+            <li>Generate an App Password (google.com/apppasswords)</li>
+            <li>Use that App Password below (not your regular Gmail password)</li>
+            <li>Host: smtp.gmail.com &bull; Port: 587 &bull; Secure: No (STARTTLS)</li>
+          </ol>
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>SMTP Host</Label>
+              <Input value="smtp.gmail.com" disabled className="bg-muted" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>SMTP Port</Label>
+              <Input value={settings.smtp_port} onChange={(e) => setSettings((s) => ({ ...s, smtp_port: e.target.value }))} disabled={!isSuperAdmin} placeholder="587" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>SMTP Username (Gmail Address)</Label>
+            <Input
+              value={settings.smtp_user}
+              onChange={(e) => setSettings((s) => ({ ...s, smtp_user: e.target.value }))}
+              disabled={!isSuperAdmin}
+              placeholder="your@gmail.com"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>SMTP Password (App Password)</Label>
+            <Input
+              type="password"
+              value={settings.smtp_pass}
+              onChange={(e) => setSettings((s) => ({ ...s, smtp_pass: e.target.value }))}
+              disabled={!isSuperAdmin}
+              placeholder="xxxx xxxx xxxx xxxx"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Notification Email (where to receive order alerts)</Label>
+            <Input
+              value={settings.notification_email}
+              onChange={(e) => setSettings((s) => ({ ...s, notification_email: e.target.value }))}
+              disabled={!isSuperAdmin}
+              placeholder="intro2fin.markets@gmail.com"
+            />
+          </div>
+        </div>
+
+        {isSuperAdmin && (
+          <div className="mt-6 flex justify-end">
+            <Button onClick={handleSave} disabled={saving} className="bg-[#c9a227] hover:bg-[#c9a227]/90 text-white gap-2">
+              {saving ? "Saving..." : "Save Settings"}
+            </Button>
+          </div>
+        )}
+
+        {!isSuperAdmin && (
+          <p className="mt-4 text-xs text-muted-foreground italic">Only Super Admin can modify these settings.</p>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 function MessageRow({ msg }: { msg: { id: number; type: string; subject: string; body: string; senderEmail?: string | null; createdAt: string } }) {
   const [expanded, setExpanded] = useState(false);
   const typeColors: Record<string, string> = {
@@ -643,7 +775,7 @@ function MessageRow({ msg }: { msg: { id: number; type: string; subject: string;
 }
 
 export default function Admin() {
-  const [tab, setTab] = useState<"books" | "orders" | "subscribers" | "messages" | "admins" | "pages" | "blogs">("orders");
+  const [tab, setTab] = useState<"books" | "orders" | "subscribers" | "messages" | "admins" | "pages" | "blogs" | "email">("orders");
   const qc = useQueryClient();
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAdminAuth();
   const [, setLocation] = useLocation();
@@ -654,7 +786,7 @@ export default function Admin() {
   const { data: messages, isLoading: msgsLoading } = useListMessages({ query: { queryKey: getListMessagesQueryKey(), enabled: isAuthenticated } });
   const { data: books } = useListBooks({ query: { queryKey: getListBooksQueryKey(), enabled: isAuthenticated } });
 
-  const pendingOrders = orders?.filter((o) => o.status === "pending").length ?? 0;
+  const pendingOrders = orders?.filter((o) => o.status === "received").length ?? 0;
 
   const isReadonly = user?.role === "readonly";
 
@@ -664,11 +796,11 @@ export default function Admin() {
     { id: "blogs" as const,       label: "Blog Posts",  icon: FileText,    count: undefined },
     { id: "subscribers" as const, label: "Subscribers", icon: Users,       count: subscribers?.length },
     { id: "messages" as const,    label: "Messages",    icon: MessageSquare, count: messages?.length },
-    { id: "admins" as const,      label: "Manage Admins", icon: ShieldCheck,   count: undefined },
-    { id: "pages" as const,       label: "Site Pages",    icon: Layout,
-  FileText,            count: undefined },
+    { id: "email" as const,       label: "Email",       icon: MessageSquare, count: undefined },
+    { id: "admins" as const,      label: "Manage Admins", icon: ShieldCheck, count: undefined },
+    { id: "pages" as const,       label: "Site Pages",  icon: Layout,      count: undefined },
   ];
-  const tabs = isReadonly ? allTabs.filter((t) => t.id === "orders") : (user?.role === 'super_admin' ? allTabs : allTabs.filter(t => t.id !== 'admins'));
+  const tabs = isReadonly ? allTabs.filter((t) => t.id === "orders") : (user?.role === 'super_admin' ? allTabs : allTabs.filter(t => t.id !== 'admins' && t.id !== 'email'));
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -732,7 +864,7 @@ export default function Admin() {
           {pendingOrders > 0 && (
             <div className="mt-4 flex items-center gap-2 bg-yellow-500/10 border border-yellow-400/30 rounded-xl px-4 py-3 text-yellow-300 text-sm font-medium">
               <AlertCircle className="h-4 w-4 shrink-0" />
-              {pendingOrders} order{pendingOrders > 1 ? "s" : ""} awaiting confirmation
+              {pendingOrders} order{pendingOrders > 1 ? "s" : ""} awaiting processing
             </div>
           )}
         </div>
@@ -885,7 +1017,8 @@ export default function Admin() {
               )}
             </motion.div>
           )}
-          {tab === "pages" && <PagesTab />}
+          {tab === "email" && <EmailTab key="email" />}
+        {tab === "pages" && <PagesTab />}
         {tab === "blogs" && <BlogsTab />}
           {tab === "admins" && (
             <motion.div key="admins" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>

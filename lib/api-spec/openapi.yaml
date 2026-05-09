@@ -23,6 +23,8 @@ tags:
     description: Site page content management
   - name: blogs
     description: Blog posts management
+  - name: settings
+    description: Site email settings management
 paths:
   /pages:
     get:
@@ -515,6 +517,42 @@ paths:
         "404":
           description: Blog post not found
 
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get all site settings (admin)
+      responses:
+        "200":
+          description: Settings object
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+    put:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update site settings (super_admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/SettingsEntry"
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+
 components:
   schemas:
     HealthStatus:
@@ -655,12 +693,23 @@ components:
       properties:
         status:
           type: string
-          enum: [pending, confirmed, shipped, delivered, cancelled]
+          enum: [received, delivered]
         notes:
           type: string
           nullable: true
       required:
         - status
+
+    SettingsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+      required:
+        - key
+        - value
 
     Order:
       type: object
@@ -689,7 +738,7 @@ components:
           nullable: true
         status:
           type: string
-          enum: [pending, confirmed, shipped, delivered, cancelled]
+          enum: [received, delivered]
         notes:
           type: string
           nullable: true
@@ -854,6 +903,8 @@ components:
           type: integer
         totalPodcasts:
           type: integer
+        totalRevenue:
+          type: number
       required:
         - totalBooks
         - totalOrders

@@ -10,6 +10,7 @@ import adminRouter from "./admin";
 import uploadRouter from "./upload";
 import pagesRouter from "./pages";
 import blogsRouter from "./blogs";
+import settingsRouter from "./settings";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(messagesRouter);
 router.use(statsRouter);
 router.use(pagesRouter);
 router.use(blogsRouter);
+router.use(settingsRouter);
 
 export default router;

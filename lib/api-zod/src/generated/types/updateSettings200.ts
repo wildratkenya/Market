@@ -6,9 +6,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateSubscriberBody {
-  name: string;
-  email: string;
-  phone?: string | null;
-  wantsWhatsapp: boolean;
-}
+export type UpdateSettings200 = {[key: string]: string};

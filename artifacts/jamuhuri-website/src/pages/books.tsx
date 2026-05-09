@@ -268,15 +268,19 @@ export default function Books() {
                     
                     <div className="border-t border-border/50 pt-6 mt-auto">
                       <div className="flex flex-col gap-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-muted-foreground">Price from</span>
-                          <span className="font-mono text-xl font-bold text-foreground">
-                            {book.hardcopyPrice
-                              ? `${book.currency} ${book.hardcopyPrice.toLocaleString()}`
-                              : book.ebookPrice
-                              ? `${book.currency} ${book.ebookPrice.toLocaleString()}`
-                              : 'Contact for price'}
-                          </span>
+                        <div className="space-y-1 mb-2">
+                          {book.type !== "ebook" && book.hardcopyPrice != null && (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Hard Copy</span>
+                              <span className="font-mono font-bold">{book.currency} {book.hardcopyPrice.toLocaleString()}</span>
+                            </div>
+                          )}
+                          {book.type !== "hardcopy" && book.ebookPrice != null && (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">E-Book</span>
+                              <span className="font-mono font-bold">{book.currency} {book.ebookPrice.toLocaleString()}</span>
+                            </div>
+                          )}
                         </div>
                         <Button
                           onClick={() => setPreviewBook(book)}
@@ -435,44 +439,54 @@ export default function Books() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end border-y border-border/50 py-6">
-                  <FormField
-                    control={form.control}
-                    name="quantity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Quantity</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center gap-4">
-                            <Button 
-                              type="button" 
-                              variant="outline" 
-                              size="icon" 
-                              className="h-10 w-10 shrink-0"
-                              onClick={() => field.onChange(Math.max(1, field.value - 1))}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <Input 
-                              type="number" 
-                              className="text-center h-10 text-lg font-bold" 
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                            />
-                            <Button 
-                              type="button" 
-                              variant="outline" 
-                              size="icon" 
-                              className="h-10 w-10 shrink-0"
-                              onClick={() => field.onChange(field.value + 1)}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {watchOrderType === "hardcopy" ? (
+                    <FormField
+                      control={form.control}
+                      name="quantity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quantity</FormLabel>
+                          <FormControl>
+                            <div className="flex items-center gap-4">
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-10 w-10 shrink-0"
+                                onClick={() => field.onChange(Math.max(1, field.value - 1))}
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                              <Input 
+                                type="number" 
+                                className="text-center h-10 text-lg font-bold" 
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                              />
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-10 w-10 shrink-0"
+                                onClick={() => field.onChange(field.value + 1)}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : (
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-sm font-bold">1</div>
+                      <div>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Quantity</p>
+                        <p className="font-bold text-foreground">1 Copy (E-Book)</p>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="space-y-2 text-right">
                     <div className="flex justify-between items-center text-sm text-muted-foreground">
@@ -498,7 +512,7 @@ export default function Books() {
                   >
                     <div className="bg-primary/10 p-4 rounded-lg border border-primary/20 mb-4">
                       <p className="text-sm font-medium text-foreground">
-                        <strong className="text-primary">Payment:</strong> Till No: <strong>3016590</strong>. Amount: KES 3,000 (Hardcopy). Shipping charges apply based on your location and courier rates.
+                        <strong className="text-primary">Payment:</strong> Till No: <strong>3016590</strong>. Amount: KES {totalPrice.toLocaleString()} (Hardcopy × {watchQuantity}). Shipping charges apply based on your location and courier rates.
                       </p>
                     </div>
 
@@ -547,7 +561,7 @@ export default function Books() {
                     className="bg-primary/10 p-4 rounded-lg border border-primary/20 mt-4"
                   >
                     <p className="text-sm font-medium text-foreground">
-                      <strong className="text-primary">E-Book Payment:</strong> Till No: <strong>3016590</strong>. Amount: KES 2,000 (Softcopy). Payment confirmation and your email address required for instant delivery.
+                      <strong className="text-primary">E-Book Payment:</strong> Till No: <strong>3016590</strong>. Amount: KES {totalPrice.toLocaleString()} (E-Book × 1). Payment confirmation and your email address required for instant delivery.
                     </p>
                   </motion.div>
                 )}

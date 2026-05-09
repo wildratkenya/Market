@@ -8,6 +8,13 @@
       "when": 1778171103105,
       "tag": "0000_right_black_widow",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778321213724,
+      "tag": "0001_amazing_stone_men",
+      "breakpoints": true
     }
   ]
 }
