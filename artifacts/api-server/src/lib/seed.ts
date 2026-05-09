@@ -111,6 +111,41 @@ export async function forceResetAdmin() {
 
 export async function seedDatabase({ info }: { info: (msg: string) => void }) {
   await seedResilient(info);
+
+  // Create missing tables if they don't exist
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS blogs (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        slug TEXT NOT NULL UNIQUE,
+        excerpt TEXT NOT NULL,
+        content TEXT NOT NULL,
+        cover_image TEXT,
+        category TEXT,
+        published BOOLEAN DEFAULT true NOT NULL,
+        published_at TIMESTAMP DEFAULT NOW(),
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP
+      );
+    `);
+    info("Ensured blogs table exists");
+  } catch (err) {
+    info(`Drizzle blogs table check failed: ${err.message}`);
+  }
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    info("Ensured settings table exists");
+  } catch (err) {
+    info(`Drizzle settings table check failed: ${err.message}`);
+  }
   
   // Resilient Books Seeding
   try {

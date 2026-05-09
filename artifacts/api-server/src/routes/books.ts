@@ -38,8 +38,8 @@ function serializeBook(b: any) {
   return {
     ...b,
     id: b.id || b.bookId,
-    hardcopyPrice: b.hardcopyPrice ? Number(b.hardcopyPrice) : null,
-    ebookPrice: b.ebookPrice ? Number(b.ebookPrice) : null,
+    hardcopyPrice: b.hardcopyPrice != null ? Number(b.hardcopyPrice) : null,
+    ebookPrice: b.ebookPrice != null ? Number(b.ebookPrice) : null,
     createdAt: dateString,
   };
 }
