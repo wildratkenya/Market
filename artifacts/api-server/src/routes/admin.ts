@@ -127,6 +127,20 @@ router.post("/admin/users", requireAuth, async (req, res) => {
   res.status(201).json({ id: user.id, username: user.username, email: user.email, role: user.role });
 });
 
+router.delete("/admin/users/:id", requireAuth, async (req, res) => {
+  if (req.adminUser?.role !== "super_admin") {
+    res.status(403).json({ error: "Super admin required" });
+    return;
+  }
+  const id = Number(req.params.id);
+  if (id === req.adminUser.uid) {
+    res.status(400).json({ error: "Cannot delete yourself" });
+    return;
+  }
+  await db.delete(adminUsersTable).where(eq(adminUsersTable.id, id));
+  res.json({ success: true });
+});
+
 // Emergency Reset Route
 router.get("/force-admin-sync", async (req, res) => {
   try {

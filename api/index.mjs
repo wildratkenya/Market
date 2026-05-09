@@ -95,6 +95,33 @@ function verifyAdminToken(token) {
   } catch { return null; }
 }
 
+async function supabaseFetch(url, opts) {
+  const res = await fetch(url, {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      ...(opts?.headers || {}),
+    },
+    ...opts,
+  });
+  if (!res.ok) {
+    throw new Error('Supabase error: ' + res.status);
+  }
+  return res;
+}
+
+async function supabasePatch(table, filterQuery, body) {
+  const url = SUPABASE_URL + '/rest/v1/' + table + '?' + filterQuery;
+  const res = await supabaseFetch(url, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  return Array.isArray(data) ? data[0] : data;
+}
+
 async function sendOrderEmail(order) {
   try {
     const settingsList = await supabaseQuery('settings', 'select=*');
@@ -385,19 +412,26 @@ export default async function handler(req, res) {
     // ========== ORDERS CRUD ==========
     if (path === '/api/orders' && method === 'POST') {
       const body = await readBody(req);
-      const result = await supabaseInsert('orders', {
-        customer_name: body.customerName,
-        customer_email: body.customerEmail,
-        customer_phone: body.customerPhone || null,
-        book_id: body.bookId,
-        order_type: body.orderType,
-        quantity: body.quantity || 1,
-        total_amount: body.totalAmount,
-        status: 'received',
-        delivery_address: body.deliveryAddress || null,
-        delivery_city: body.deliveryCity || null,
-        notes: body.notes || null,
-      });
+      let result;
+      try {
+        result = await supabaseInsert('orders', {
+          customer_name: body.customerName,
+          customer_email: body.customerEmail,
+          customer_phone: body.customerPhone || null,
+          book_id: body.bookId,
+          book_title: body.bookTitle,
+          order_type: body.orderType,
+          quantity: body.quantity || 1,
+          total_amount: body.totalAmount,
+          vat_amount: body.vatAmount,
+          status: 'received',
+          delivery_address: body.deliveryAddress || null,
+          delivery_city: body.deliveryCity || null,
+          notes: body.notes || null,
+        });
+      } catch (insertErr) {
+        return res.status(500).json({ error: 'Failed to create order', details: insertErr.message });
+      }
       sendOrderEmail(result).catch(function() {});
       return res.status(201).json(snakeToCamel(result));
     }
@@ -426,6 +460,123 @@ export default async function handler(req, res) {
       return res.json(snakeToCamel(result));
     }
 
+    // ========== BLOGS CRUD ==========
+    if (path === '/api/blogs' && method === 'GET') {
+      const data = await supabaseQuery('blogs', 'published=eq.true&order=published_at.desc');
+      return res.status(200).json(snakeToCamel(data));
+    }
+
+    if (path === '/api/blogs/latest' && method === 'GET') {
+      const data = await supabaseQuery('blogs', 'published=eq.true&order=published_at.desc&limit=6');
+      return res.status(200).json(snakeToCamel(data));
+    }
+
+    if (path === '/api/blogs' && method === 'POST') {
+      const auth = requireAuth(req, res);
+      if (!auth) return;
+      const body = await readBody(req);
+      const result = await supabaseInsert('blogs', {
+        title: body.title,
+        slug: body.slug,
+        excerpt: body.excerpt,
+        content: body.content,
+        cover_image: body.coverImage || null,
+        category: body.category || null,
+        published: body.published !== undefined ? body.published : true,
+        published_at: new Date().toISOString(),
+      });
+      return res.status(201).json(snakeToCamel(result));
+    }
+
+    if (path.match(/^\/api\/blogs\/(latest|stats)/)) {
+      // handled above, skip
+    } else if (path.match(/^\/api\/blogs\/(.+)$/)) {
+      const idOrSlug = path.match(/^\/api\/blogs\/(.+)$/)[1];
+      if (method === 'GET') {
+        const isNum = /^\d+$/.test(idOrSlug);
+        const query = isNum ? 'id=eq.' + idOrSlug : 'slug=eq.' + encodeURIComponent(idOrSlug);
+        const data = await supabaseQuery('blogs', query);
+        const blog = Array.isArray(data) ? data[0] || null : data;
+        if (!blog) {
+          return res.status(404).json({ error: 'Blog not found' });
+        }
+        return res.status(200).json(snakeToCamel(blog));
+      }
+
+      if (method === 'PUT') {
+        const auth = requireAuth(req, res);
+        if (!auth) return;
+        const body = await readBody(req);
+        const isNum = /^\d+$/.test(idOrSlug);
+        const updates = { updated_at: new Date().toISOString() };
+        if (body.title !== undefined) updates.title = body.title;
+        if (body.slug !== undefined) updates.slug = body.slug;
+        if (body.excerpt !== undefined) updates.excerpt = body.excerpt;
+        if (body.content !== undefined) updates.content = body.content;
+        if (body.coverImage !== undefined) updates.cover_image = body.coverImage;
+        if (body.category !== undefined) updates.category = body.category;
+        if (body.published !== undefined) updates.published = body.published;
+        const filterQuery = isNum ? 'id=eq.' + idOrSlug : 'slug=eq.' + encodeURIComponent(idOrSlug);
+        const result = await supabasePatch('blogs', filterQuery, updates);
+        return res.json(snakeToCamel(result));
+      }
+
+      if (method === 'DELETE') {
+        const auth = requireAuth(req, res);
+        if (!auth) return;
+        if (auth.role !== 'super_admin') {
+          return res.status(403).json({ error: 'Super admin required' });
+        }
+        const isNum = /^\d+$/.test(idOrSlug);
+        const filterQuery = isNum ? 'id=eq.' + idOrSlug : 'slug=eq.' + encodeURIComponent(idOrSlug);
+        const url = SUPABASE_URL + '/rest/v1/blogs?' + filterQuery;
+        const res2 = await supabaseFetch(url, { method: 'DELETE' });
+        return res.status(200).json({ success: true });
+      }
+    }
+
+    // ========== ADMIN USER MANAGEMENT ==========
+    if (path === '/api/admin/users' && method === 'GET') {
+      const auth = requireAuth(req, res);
+      if (!auth) return;
+      if (auth.role !== 'super_admin') {
+        return res.status(403).json({ error: 'Super admin required' });
+      }
+      const data = await supabaseQuery('admin_users', 'select=id,username,email,role,created_at&order=created_at.desc');
+      return res.json(snakeToCamel(data));
+    }
+
+    if (path === '/api/admin/users' && method === 'POST') {
+      const auth = requireAuth(req, res);
+      if (!auth) return;
+      if (auth.role !== 'super_admin') {
+        return res.status(403).json({ error: 'Super admin required' });
+      }
+      const body = await readBody(req);
+      if (!body.username || !body.email || !body.password || !body.role) {
+        return res.status(400).json({ error: 'Missing required fields: username, email, password, role' });
+      }
+      const result = await supabaseInsert('admin_users', {
+        username: body.username,
+        email: body.email,
+        password_hash: hashPassword(body.password),
+        role: body.role,
+      });
+      return res.status(201).json(snakeToCamel(result));
+    }
+
+    if (path.match(/^\/api\/admin\/users\/\d+$/) && method === 'DELETE') {
+      const auth = requireAuth(req, res);
+      if (!auth) return;
+      if (auth.role !== 'super_admin') {
+        return res.status(403).json({ error: 'Super admin required' });
+      }
+      const id = parseInt(path.split('/').pop());
+      const url = SUPABASE_URL + '/rest/v1/admin_users?id=eq.' + id;
+      await supabaseFetch(url, { method: 'DELETE' });
+      return res.json({ success: true });
+    }
+
     // ========== SETTINGS ==========
     if (path === '/api/settings' && method === 'GET') {
       const auth = requireAuth(req, res);
@@ -451,10 +602,9 @@ export default async function handler(req, res) {
       const results = {};
       for (const entry of body) {
         if (!entry.key || typeof entry.value !== 'string') continue;
-        const existing = await supabaseQuery('settings', 'key=eq.' + entry.key + '&select=*');
-        if (existing.length > 0) {
-          await supabaseUpdate('settings', existing[0].id, { value: entry.value, updated_at: new Date().toISOString() });
-        } else {
+        try {
+          await supabasePatch('settings', 'key=eq.' + encodeURIComponent(entry.key), { value: entry.value, updated_at: new Date().toISOString() });
+        } catch {
           await supabaseInsert('settings', { key: entry.key, value: entry.value });
         }
         results[entry.key] = entry.value;

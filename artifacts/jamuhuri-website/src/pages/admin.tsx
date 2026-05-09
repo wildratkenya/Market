@@ -5,7 +5,7 @@ import {
   ShoppingBag, Users, MessageSquare, RefreshCw, ChevronDown, ChevronUp,
   Package, Monitor, Check, Clock, BookOpen, Plus, Pencil, Trash2,
   AlertCircle, Truck, CheckCircle2, XCircle, X, LogOut, ShieldCheck, Layout,
-  FileText
+  FileText, UserCog
 } from "lucide-react";
 import { useAdminAuth } from "@/contexts/admin-auth-context";
 import {
@@ -730,6 +730,187 @@ function EmailTab() {
   );
 }
 
+function AdminsTab() {
+  const { user } = useAdminAuth();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [admins, setAdmins] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ username: "", email: "", password: "", role: "editor" });
+  const [saving, setSaving] = useState(false);
+
+  const fetchAdmins = () => {
+    setLoading(true);
+    fetch("/api/admin/users", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+      .then((r) => r.json())
+      .then((data) => { setAdmins(Array.isArray(data) ? data : []); })
+      .catch(() => { setAdmins([]); })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchAdmins(); }, []);
+
+  const handleDelete = (id: number, username: string) => {
+    if (!window.confirm(`Delete admin "${username}"? This cannot be undone.`)) return;
+    fetch(`/api/admin/users/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
+    })
+      .then(async (r) => {
+        if (r.ok) {
+          toast({ title: "Admin deleted", description: `"${username}" removed.` });
+          fetchAdmins();
+        } else {
+          const err = await r.json().catch(() => ({}));
+          toast({ variant: "destructive", title: "Delete failed", description: err.error || "Could not delete admin." });
+        }
+      })
+      .catch(() => { toast({ variant: "destructive", title: "Delete failed", description: "Network error." }); });
+  };
+
+  const handleCreate = async () => {
+    if (!form.username.trim() || !form.email.trim() || !form.password.trim()) {
+      toast({ variant: "destructive", title: "Missing fields", description: "Username, email, and password are required." });
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        toast({ title: "Admin created", description: `"${form.username}" added.` });
+        setShowForm(false);
+        setForm({ username: "", email: "", password: "", role: "editor" });
+        fetchAdmins();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ variant: "destructive", title: "Create failed", description: err.error || "Could not create admin." });
+      }
+    } catch {
+      toast({ variant: "destructive", title: "Create failed", description: "Network error." });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />)}</div>;
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-semibold text-foreground">{admins.length} Admin{admins.length !== 1 ? "s" : ""}</h2>
+        <Button
+          onClick={() => setShowForm(!showForm)}
+          className="bg-[#c9a227] hover:bg-[#c9a227]/90 text-white gap-2"
+        >
+          <UserCog className="h-4 w-4" /> {showForm ? "Cancel" : "Add Admin"}
+        </Button>
+      </div>
+
+      {showForm && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="bg-card border border-border rounded-xl p-6 mb-6 max-w-lg"
+        >
+          <h3 className="font-semibold text-foreground mb-4">New Admin User</h3>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Username</Label>
+              <Input value={form.username} onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))} placeholder="johndoe" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email</Label>
+              <Input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="john@example.com" type="email" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Password</Label>
+              <Input value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder="Min 6 characters" type="password" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Role</Label>
+              <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="editor">Editor</SelectItem>
+                  <SelectItem value="readonly">Read Only</SelectItem>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleCreate} disabled={saving} className="w-full mt-2">
+              {saving ? "Creating..." : "Create Admin"}
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {admins.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <ShieldCheck className="h-12 w-12 mx-auto mb-4 opacity-30" />
+          <p className="text-lg font-medium">No admin users</p>
+        </div>
+      ) : (
+        <div className="bg-card border border-border rounded-xl overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr>
+                {["#", "Username", "Email", "Role", "Created", ""].map((h) => (
+                  <th key={h} className="text-left p-4 font-semibold text-muted-foreground whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {admins.map((admin, i) => (
+                <tr key={admin.id} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
+                  <td className="p-4 text-muted-foreground">{i + 1}</td>
+                  <td className="p-4 font-medium text-foreground">{admin.username}</td>
+                  <td className="p-4 text-muted-foreground">{admin.email}</td>
+                  <td className="p-4">
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                      admin.role === "super_admin" ? "bg-purple-100 text-purple-700" :
+                      admin.role === "editor" ? "bg-blue-100 text-blue-700" :
+                      "bg-gray-100 text-gray-700"
+                    }`}>
+                      {admin.role?.replace("_", " ")}
+                    </span>
+                  </td>
+                  <td className="p-4 text-muted-foreground text-xs whitespace-nowrap">
+                    {admin.createdAt ? new Date(admin.createdAt).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" }) : ""}
+                  </td>
+                  <td className="p-4">
+                    {admin.username !== user?.username && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(admin.id, admin.username)}
+                        className="h-8 px-2 text-red-500 hover:bg-red-50 gap-1"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 function MessageRow({ msg }: { msg: { id: number; type: string; subject: string; body: string; senderEmail?: string | null; createdAt: string } }) {
   const [expanded, setExpanded] = useState(false);
   const typeColors: Record<string, string> = {
@@ -1020,18 +1201,7 @@ export default function Admin() {
           {tab === "email" && <EmailTab key="email" />}
         {tab === "pages" && <PagesTab />}
         {tab === "blogs" && <BlogsTab />}
-          {tab === "admins" && (
-            <motion.div key="admins" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="bg-card border border-border rounded-xl overflow-hidden p-8 text-center">
-                <ShieldCheck className="h-12 w-12 mx-auto mb-4 text-[#c9a227]" />
-                <h3 className="text-xl font-bold mb-2">Admin Management</h3>
-                <p className="text-muted-foreground mb-6">As Super Admin, you can invite and manage other administrators here.</p>
-                <div className="max-w-md mx-auto p-6 border border-border rounded-xl bg-muted/20">
-                  <p className="text-sm italic">Feature note: You can currently manage admins via the direct database seeding. A full interactive admin manager UI is being finalized.</p>
-                </div>
-              </div>
-            </motion.div>
-          )}
+          {tab === "admins" && <AdminsTab key="admins" />}
         </AnimatePresence>
       </div>
     </div>
